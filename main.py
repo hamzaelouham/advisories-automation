@@ -50,6 +50,7 @@ def scrape(item):
     _item["CVSSv3Range"] = item["CVSSv3Range"]
     advisoryURL = "https://www.vmware.com"+item["AdvisoryURL"]
     _item["VMware Security Advisory link"] = advisoryURL
+   
     html = get_html(advisoryURL)
     soup = BeautifulSoup(html,features='html.parser')
     titles = [
@@ -64,10 +65,12 @@ def scrape(item):
              ]
     nodes = soup.find_all("div", class_="col-md-12 no-padd")
 
-    for i in range(1,8):
-      temp_string = nodes[i].text
-      temp_string = temp_string.strip()
-      _item[titles[i-1]] = temp_string
+    for i in range(1,9):
+        if i == 8:
+            continue # Skip index 8
+        temp_string = nodes[i].text
+        temp_string = temp_string.strip()
+        _item[titles[i-1]] = temp_string
       
     return _item  
 
@@ -78,20 +81,24 @@ def extract(items):
 
     for item in items:
        _item = scrape(item)
-       advisories.append(_item)   
+       advisories.append(_item)    
+
+    log.info('Start scraping data getting : %d advisory',len(advisories))
     return advisories
 
 
 def transform(data):
+     log.info('Starting saving data into excel /!\ ')
      df = pd.DataFrame(data)
-     df.to_csv("data.csv", index=True)
+     df.to_excel("data.xlsx", index=False)
+     log.info('Done saving data into excel /!\ ')    
 
 def getcurrentdate():
     return datetime.now().strftime('%Y-%m')
 
 def main():
 
-    currentdate = '2023-11'
+    currentdate = '2023-12'
 
     url = f"https://www.vmware.com/bin/vmware/getmodernizeadvisorieslist?resourcePath=/content/vmware/vmware-published-sites/us/security/advisories&searchText={currentdate}"
     
