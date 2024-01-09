@@ -1,0 +1,9 @@
+,CVE,Pubdate,IssueDate,UpdatedOn,AdvisoryID,Synopsis,CVSSv3Range,VMware Security Advisory link,Impacted Products,Introduction,Description,Known Attack Vectors,Resolution,Workarounds,Notes
+0,CVE-2023-34060,2023-11-15,2023-11-14,2023-11-30,VMSA-2023-0026.1,VMware Cloud Director Appliance contains an authentication bypass vulnerability (CVE-2023-34060).,9.8,https://www.vmware.com/security/advisories/VMSA-2023-0026.html,VMware Cloud Director Appliance (VCD Appliance),An authentication bypass vulnerability in VMware Cloud Director Appliance was privately reported to VMware. Updates are available to remediate this vulnerability in the affected VMware product.,"VMware Cloud Director Appliance contains an authentication bypass vulnerability in case VMware Cloud Director Appliance was upgraded to 10.5 from
+an older version. VMware has evaluated the severity of this issue to be in the Critical severity range with a maximum CVSSv3 base score of 9.8.","On an upgraded version of VMware Cloud Director Appliance 10.5, a malicious actor with network access to the appliance can bypass login
+restrictions when authenticating on port 22 (ssh) or port 5480 (appliance management console). This bypass is not present on port 443 (VCD provider
+and tenant login). On a new installation of VMware Cloud Director Appliance 10.5, the bypass is not present.","To remediate CVE-2023-34060 on an upgraded version of VMware Cloud Director Appliance 10.5 one of two routes can be taken: 
+
+
+Upgrade to VMware Cloud Director Appliance 10.5.1 from VMware Cloud Director Appliance 10.5
+Follow the workaround guidance mentioned in KB95534",None.,None.
