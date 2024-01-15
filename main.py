@@ -1,10 +1,18 @@
-from extra import *
 from datetime import datetime
 import time
 import requests
+import logging
 from bs4 import BeautifulSoup
 import pandas as pd
-import json
+
+# Configure the loggin
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+log = logging.getLogger("logger")
+
+headers = {
+   "User-Agent":'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36'
+}
 
 
 def get_json(url):
@@ -18,10 +26,10 @@ def get_json(url):
             return response.json()["data"]
         else:
             log.error('Unexpected status code: %d. Time taken: %.2f seconds', response.status_code, time.time() - initialtime)
-            return
+            exit(1)
     except requests.exceptions.RequestException as error:
         log.error('Error during request: %s', error)
-        return
+        exit(1)
 
 def get_html(url):
     try:
@@ -67,46 +75,58 @@ def scrape(item):
 
     for i in range(1,9):
         if i == 8:
-            continue # Skip index 8
-        temp_string = nodes[i].text
-        temp_string = temp_string.strip()
-        _item[titles[i-1]] = temp_string
-      
+            temp_string = nodes[i+1].text
+            temp_string = temp_string.strip()
+            _item[titles[i-1]] = temp_string
+        else:
+            temp_string = nodes[i].text
+            temp_string = temp_string.strip()
+            _item[titles[i-1]] = temp_string
     return _item  
-
-   
 
 def extract(items):
     advisories = []
 
-    for item in items:
+    try: 
+      for item in items:
        _item = scrape(item)
-       advisories.append(_item)    
+       advisories.append(_item)
+       log.info('scraping  : %d advisory',len(advisories))
 
-    log.info('Start scraping data getting : %d advisory',len(advisories))
+    except Exception as e:
+        log.error('Error occured during scraping some pages : %s', e)
+       
+    finally:  
+        log.info('%d advisory scraped ...',len(advisories))
+    
     return advisories
 
-
 def transform(data):
-     log.info('Starting saving data into excel /!\ ')
-     df = pd.DataFrame(data)
-     df.to_excel("data.xlsx", index=False)
-     log.info('Done saving data into excel /!\ ')    
-
+     if data : 
+        log.info('saving data into excel ...')
+        df = pd.DataFrame(data)
+        filename = str(getcurrentdate()) + "-generated.xlsx"
+        df.to_excel(filename, index=False)
+        log.info('Done saving data ! ')    
+     else:
+        log.info('No data to save ! ') 
+        exit(1)
 def getcurrentdate():
-    return datetime.now().strftime('%Y-%m')
+     return datetime.now().strftime('%Y-%m')
+
+
 
 def main():
 
-    currentdate = '2023-12'
-
+    currentdate = "2023-10"
+    initialtime  = time.time()
     url = f"https://www.vmware.com/bin/vmware/getmodernizeadvisorieslist?resourcePath=/content/vmware/vmware-published-sites/us/security/advisories&searchText={currentdate}"
     
     rawdata = get_json(url)
     data = extract(rawdata)
-    # html = extract(raw)
     transform(data)
-
+ 
+    log.info('successful finishing. Time taken: %.2f seconds' ,time.time() - initialtime)
 
 if __name__ == "__main__":
      main()
