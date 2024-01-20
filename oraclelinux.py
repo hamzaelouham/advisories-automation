@@ -81,6 +81,3 @@ if __name__ == "__main__":
 
 
 
-#    df = pd.DataFrame(advisories)
-#        df.to_excel()
-#        df.to_excel('oracle-generated.xlsx', index=False) 
