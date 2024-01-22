@@ -41,7 +41,7 @@ def scrape(link, version):
     # Oracle Linux 9 (x86_64)
     html = get_html(link) 
     soup = BeautifulSoup(html,features='html.parser')
-    aid = soup.find('li',string=lambda text: text and text.startswith('ELSA')).text.strip()
+    aid = soup.find('li',string=lambda text: text and (text.startswith('ELSA') or text.startswith('ELBA'))).text.strip()
     container = soup.find('div', class_="mc10 mc10v6")
     summary = container.find('h2').text.strip().split(' - ')[1]
     tables = container.find_all('table')
@@ -52,14 +52,18 @@ def scrape(link, version):
     
     scraped = []
     
-    start_row = soup.find('td',string=f"Oracle Linux {version} (x86_64)").find_parent()
-    scraped.append({'OS':f'OL{version}','id':aid,'Advisory link': link,'type':Type ,'Release Date': Release_Date, 'vonder rating':Severity, 'summary':summary, 'Rpms': start_row.find_all('td')[1].text.strip(), "CVEs": Cves })
-    rpms = start_row.find_all_next('tr')
-    #Extract rpms from the target rows in table
-    for rpm in rpms:
-        
-        scraped.append({'OS':f'OL{version}','id':aid,'Advisory link': link,'type':Type ,'Release Date': Release_Date, 'vonder rating':Severity, 'summary':summary, 'Rpms': rpm.find_all('td')[1].text.strip(), "CVEs": Cves })   
-
+    start_row = None
+    if soup.find('td',string=f"Oracle Linux {version} (x86_64)"):
+        start_row = soup.find('td',string=f"Oracle Linux {version} (x86_64)").find_parent()
+        scraped.append({'OS':f'OL{version}','id':aid,'Advisory link': link,'type':Type ,'Release Date': Release_Date, 'vonder rating':Severity, 'summary':summary, 'Rpms': start_row.find_all('td')[1].text.strip(), "CVEs": Cves })
+        rpms = start_row.find_all_next('tr')
+        #Extract rpms from the target rows in table
+        for rpm in rpms:
+            
+            scraped.append({'OS':f'OL{version}','id':aid,'Advisory link': link,'type':Type ,'Release Date': Release_Date, 'vonder rating':Severity, 'summary':summary, 'Rpms': rpm.find_all('td')[1].text.strip(), "CVEs": Cves })   
+    else:
+        scraped.append({'OS':f'OL{version}','id':aid,'Advisory link': link,'type':Type ,'Release Date': Release_Date, 'vonder rating':Severity, 'summary':summary, 'Rpms': 'None', "CVEs": Cves })
+        log.warn(f'No Rpms found for Oracle Linux {version}')
     return scraped
         
 
