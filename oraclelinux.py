@@ -34,28 +34,54 @@ def get_html(url):
         log.error('Error during request: %s', error)
         return
 
-def scrape(html,tag='main'):
-    soup = BeautifulSoup(html,features='html.parser')
-    
-    if tag == 'main':
-       table = soup.find('table',class_="report-standard-alternatingrowcolors")
-       html_rows = table.find_all("tr",class_="highlight-row")
-       advisories = []
-       item = {}
-       for html_row in html_rows:
-        #  item['advisoryUrl'] = html_row.select('td[headers="ADVISORY_ID"]')
-            link = html_row.select_one('td[headers="ADVISORY_ID"] a')
-
-            item = {
-                        'url': "https://linux.oracle.com" +link['href'],
-                        'Advisory':  link.text,
-                        'Release_Date': html_row.select_one('td[headers="RELEASE_DATE"]').text
-                    }
-            advisories.append(item)
     
            
-    else:
-        print('scraping advisory page !')   
+def scrape(link):
+
+    version = 9
+    html = get_html(link) 
+    soup = BeautifulSoup(html,features='html.parser')
+    # Oracle Linux 9 (x86_64)
+    aid = soup.find('li',string=lambda text: text and text.startswith('ELSA')).text.strip()
+    container = soup.find('div', class_="mc10 mc10v6")
+    summary = container.find('h2').text.strip().split(' - ')[1]
+    tables = container.find_all('table')
+    Type = tables[0].find_all('tr')[0].find_all('td')[1].text.strip()
+    Severity = tables[0].find_all('tr')[1].find_all('td')[1].text.strip()
+    Release_Date = tables[0].find_all('tr')[2].find_all('td')[1].text.strip()
+    Cves =  ', '.join([td.text.strip() for td in tables[1].find_all("tr")])
+    
+    print(aid,summary,Type,Severity,Release_Date,Cves)
+
+    rpms = []
+    start_row = soup.find('td',string=f"Oracle Linux {version} (x86_64)").find_parent()
+    rpms.append(start_row.find_all('td')[1].text.strip())
+    target_rows = start_row.find_all_next('tr')
+    #Extract data from the target rows
+    for row in target_rows:
+       rpms.append(row.find_all('td')[1].text.strip())
+   
+
+    print(len(rpms))
+        
+
+def extract(links):
+    
+    for link in links:
+        scrape(link)
+       
+    return []
+
+def get_links(html):
+    
+    links = []
+    soup = BeautifulSoup(html,features='html.parser') 
+    table = soup.find('table',class_="report-standard-alternatingrowcolors")
+    rows = table.find_all("tr",class_="highlight-row")
+    for row in rows :
+       links.append("https://linux.oracle.com"+row.select_one('td[headers="ADVISORY_ID"] a')['href'])
+    
+    return links
 
 def main():
 
@@ -66,11 +92,11 @@ def main():
     
     url_data  = f'https://linux.oracle.com/ords/f?p=105:21:103400541386218:pg_R_1213672130548773998:NO&pg_min_row=0&pg_max_rows={max_rows}&pg_rows_fetched=1000'
 
-    html = get_html(url)
-    print(scrape(html)) 
-
+    # html = get_html(url)
+    # links = get_links(html)
+    # data = extract(links)
     # save scraped date into execl sheet
-   
+    scrape('https://linux.oracle.com/errata/ELSA-2024-0071.html')
    
     log.info('successful finishing. Time taken: %.2f seconds' ,time.time() - initialtime)
 
