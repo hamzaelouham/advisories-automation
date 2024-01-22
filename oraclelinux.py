@@ -36,12 +36,11 @@ def get_html(url):
 
     
            
-def scrape(link):
+def scrape(link, version):
 
-    version = 9
+    # Oracle Linux 9 (x86_64)
     html = get_html(link) 
     soup = BeautifulSoup(html,features='html.parser')
-    # Oracle Linux 9 (x86_64)
     aid = soup.find('li',string=lambda text: text and text.startswith('ELSA')).text.strip()
     container = soup.find('div', class_="mc10 mc10v6")
     summary = container.find('h2').text.strip().split(' - ')[1]
@@ -51,26 +50,26 @@ def scrape(link):
     Release_Date = tables[0].find_all('tr')[2].find_all('td')[1].text.strip()
     Cves =  ', '.join([td.text.strip() for td in tables[1].find_all("tr")])
     
-    print(aid,summary,Type,Severity,Release_Date,Cves)
-
-    rpms = []
+    scraped = []
+    
     start_row = soup.find('td',string=f"Oracle Linux {version} (x86_64)").find_parent()
-    rpms.append(start_row.find_all('td')[1].text.strip())
-    target_rows = start_row.find_all_next('tr')
-    #Extract data from the target rows
-    for row in target_rows:
-       rpms.append(row.find_all('td')[1].text.strip())
-   
+    scraped.append({'OS':f'OL{version}','id':aid,'Advisory link': link,'type':Type ,'Release Date': Release_Date, 'vonder rating':Severity, 'summary':summary, 'Rpms': start_row.find_all('td')[1].text.strip(), "CVEs": Cves })
+    rpms = start_row.find_all_next('tr')
+    #Extract rpms from the target rows in table
+    for rpm in rpms:
+        
+        scraped.append({'OS':f'OL{version}','id':aid,'Advisory link': link,'type':Type ,'Release Date': Release_Date, 'vonder rating':Severity, 'summary':summary, 'Rpms': rpm.find_all('td')[1].text.strip(), "CVEs": Cves })   
 
-    print(len(rpms))
+    return scraped
         
 
 def extract(links):
-    
+    version = 9
+    data = []
     for link in links:
-        scrape(link)
+       data.extend(scrape(link, version))
        
-    return []
+    return data
 
 def get_links(html):
     
@@ -86,18 +85,19 @@ def get_links(html):
 def main():
 
     initialtime  = time.time()
-    
     url = "https://linux.oracle.com/ords/f?p=105:21::::RP::"
-    max_rows = 1000
-    
-    url_data  = f'https://linux.oracle.com/ords/f?p=105:21:103400541386218:pg_R_1213672130548773998:NO&pg_min_row=0&pg_max_rows={max_rows}&pg_rows_fetched=1000'
-
-    # html = get_html(url)
-    # links = get_links(html)
-    # data = extract(links)
-    # save scraped date into execl sheet
-    scrape('https://linux.oracle.com/errata/ELSA-2024-0071.html')
+    # max_rows = 1000
+    # url_data  = f'https://linux.oracle.com/ords/f?p=105:21:103400541386218:pg_R_1213672130548773998:NO&pg_min_row=0&pg_max_rows={max_rows}&pg_rows_fetched=1000'
    
+    html = get_html(url)
+    links = get_links(html)
+    data = extract(links)
+    # save scraped date into execl sheet
+    df = pd.DataFrame(data)
+    df_sorted = df.sort_values(by=['OS', 'Release Date'])
+
+    # save scraped date into execl sheet
+    df_sorted.to_excel('OL-generated.xlsx', index=False)
     log.info('successful finishing. Time taken: %.2f seconds' ,time.time() - initialtime)
 
 if __name__ == "__main__":
