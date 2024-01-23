@@ -18,6 +18,7 @@ headers = {
 
 
 def get_html(url): 
+    
     try:
         log.info('Sending request to URL: %s', url)
         initialtime  = time.time()
@@ -34,10 +35,10 @@ def get_html(url):
         return
 
     
+# Oracle Linux 9 (x86_64)
            
 def scrape(link, version):
 
-    # Oracle Linux 9 (x86_64)
     html = get_html(link) 
     soup = BeautifulSoup(html,features='html.parser')
     aid = soup.find('li',string=lambda text: text and (text.startswith('ELSA') or text.startswith('ELBA'))).text.strip()
@@ -59,29 +60,26 @@ def scrape(link, version):
         #Extract rpms from the target rows in table
         for rpm in rpms:
             rpm_elements = rpm.find_all('td')
-    # rpm.find_all('td')[1].text.strip()
+            # rpm.find_all('td')[1].text.strip()
             if len(rpm_elements) >= 2:
                 rpms_value = rpm_elements[1].text.strip()
             else:
                 rpms_value = "N/A"
             scraped.append({'OS':f'OL{version}','id':aid,'Advisory link': link,'type':Type ,'Release Date': Release_Date, 'vonder rating':Severity, 'summary':summary, 'Rpms': rpms_value, "CVEs": Cves })   
-            
-    # else:
-    #     scraped.append({'OS':f'OL{version}','id':aid,'Advisory link': link,'type':Type ,'Release Date': Release_Date, 'vonder rating':Severity, 'summary':summary, 'Rpms': 'None', "CVEs": Cves })
-    #     log.warn(f'No Rpms found for Oracle Linux {version}')
+
     return scraped
         
 
 def extract(links):
 
     data = []
-   
     for link in links:
        data.extend(scrape(link, 7))
        data.extend(scrape(link, 8))
        data.extend(scrape(link, 9))
-       
+   
     return data
+       
 
 def get_links(html):
     
@@ -90,7 +88,7 @@ def get_links(html):
     table = soup.find('table',class_="report-standard-alternatingrowcolors")
     rows = table.find_all("tr",class_="highlight-row")
     for row in rows :
-       links.append("https://linux.oracle.com"+row.select_one('td[headers="ADVISORY_ID"] a')['href'])
+       links.append("https://linux.oracle.com" + row.select_one('td[headers="ADVISORY_ID"] a')['href'])
     
     return links
 

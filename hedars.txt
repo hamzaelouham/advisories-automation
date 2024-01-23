@@ -7,3 +7,8 @@ redhat 9: https://access.redhat.com/hydra/rest/search/kcs?q=*%3A*&start=0&hl=tru
 
 
 portal_advisory_type:('Security Advisory') AND
+
+            
+    # else:
+    #     scraped.append({'OS':f'OL{version}','id':aid,'Advisory link': link,'type':Type ,'Release Date': Release_Date, 'vonder rating':Severity, 'summary':summary, 'Rpms': 'None', "CVEs": Cves })
+    #     log.warn(f'No Rpms found for Oracle Linux {version}')
