@@ -12,3 +12,23 @@ portal_advisory_type:('Security Advisory') AND
     # else:
     #     scraped.append({'OS':f'OL{version}','id':aid,'Advisory link': link,'type':Type ,'Release Date': Release_Date, 'vonder rating':Severity, 'summary':summary, 'Rpms': 'None', "CVEs": Cves })
     #     log.warn(f'No Rpms found for Oracle Linux {version}')
+
+
+
+
+    
+RHEL  Version	Matching string
+
+RHEL   7	    Red Hat Enterprise Linux Server 7
+RHEL   8	    Red Hat Enterprise Linux for x86_64 8
+RHEL   9	    Red Hat Enterprise Linux for x86_64 9
+RHEL   8.2	    Red Hat Enterprise Linux for x86_64 - Update Services for SAP Solutions 8.2
+RHEL   8.4	    Red Hat Enterprise Linux for x86_64 - Update Services for SAP Solutions 8.4
+RHEL   8.6	    Red Hat Enterprise Linux for x86_64 - Update Services for SAP Solutions 8.6
+RHEL   8.8	    Red Hat Enterprise Linux for x86_64 - Update Services for SAP Solutions 8.8
+
+
+
+
+
+p=105:21::::RP::

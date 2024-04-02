@@ -14,8 +14,21 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 log = logging.getLogger("logger")
 
+session = requests.Session()
+
 headers = {
    "User-Agent":'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36'
+}
+
+
+RHEL_versions = {
+    "RHEL 7":"Red Hat Enterprise Linux Server 7",
+    "RHEL 8":"Red Hat Enterprise Linux for x86_64 8",
+    "RHEL 9":"Red Hat Enterprise Linux for x86_64 9",
+    "RHEL8.2 sap hana":"Red Hat Enterprise Linux for x86_64 - Update Services for SAP Solutions 8.2",
+    "RHEL8.4 sap hana":"Red Hat Enterprise Linux for x86_64 - Update Services for SAP Solutions 8.4",
+    "RHEL8.6 sap hana":"Red Hat Enterprise Linux for x86_64 - Update Services for SAP Solutions 8.6",
+    "RHEL8.8 sap hana":"Red Hat Enterprise Linux for x86_64 - Update Services for SAP Solutions 8.8"
 }
 
 
@@ -23,7 +36,7 @@ def get_json(url):
     try:
         log.info('Sending request to target URL')
         initialtime  = time.time()
-        response = requests.get(url,headers=headers)
+        response = session.get(url,headers=headers)
         
         if response.status_code == 200 or response.status_code == 201:
             log.info('Request successful. Status code: %d. Time taken: %.2f seconds', response.status_code,time.time() - initialtime)
@@ -39,7 +52,7 @@ def get_html(url):
     try:
         log.info('Sending request to URL: %s', url)
         initialtime  = time.time()
-        response = requests.get(url,headers=headers)
+        response = session.get(url,headers=headers)
         
         if response.status_code == 200 or response.status_code == 201:
             log.info('Request successful. Status code: %d. Time taken: %.2f seconds', response.status_code,time.time() - initialtime)
@@ -54,10 +67,11 @@ def get_html(url):
 
 
 def Query():
+    #  last_month = datetime.now(timezone.utc) - relativedelta(months=1)
+     current_month = datetime.now(timezone.utc) 
      last_month = datetime.now(timezone.utc) - relativedelta(months=1)
-     month_before_last_month = datetime.now(timezone.utc) - relativedelta(months=2)
-     qdate = f"{{!tag=ate}}portal_publication_date:([{month_before_last_month.strftime('%Y-%m-01T00:00:00.000Z')} TO {last_month.strftime('%Y-%m-01T00:00:00.000Z')}]) AND portal_product_filter:Red\ Hat\ Enterprise\ Linux|*|*|x86_64"
-     
+     qdate = f"{{!tag=ate}}portal_publication_date:([{last_month.strftime('%Y-%m-01T00:00:00.000Z')} TO {current_month.strftime('%Y-%m-01T00:00:00.000Z')}]) AND portal_product_filter:Red\ Hat\ Enterprise\ Linux|*|*|x86_64"
+    
      return url_tools.quote_plus(qdate)
 
    
@@ -65,34 +79,53 @@ def Query():
 def extract(raw):
     data = []
     for r in raw:
-        version_8_items = scrape(r, "8")
-        version_9_items = scrape(r, "9")
-        data.extend(version_8_items)
-        data.extend(version_9_items)
+        data.extend(scrape(r))
     return data
-
-def scrape(r, version):
-     items = []
-     
-     html = get_html(r["view_uri"])
-     
-     soup = BeautifulSoup(html,features='html.parser')
-
-     packages = soup.select_one('#packages')
-
-     isfound = packages.find(string=f"Red Hat Enterprise Linux for x86_64 {version}")
-
-     if isfound :   
       
-      cves_element = soup.select_one("#cves").find("ul")
-      cves_text = ', '.join([li.text.strip() for li in cves_element.find_all("li")])
+       
+   
 
-      rpms = re.findall(r'\S+\.rpm',isfound.find_parent().find_next_sibling().text)
-
-      for rpm in rpms:
-          items.append({'OS':f'RHEL{version}','id':r['id'],'Advisory url': r["view_uri"],'Release Date': r['portal_publication_date'], 'vonder rating':r['portal_severity'], 'summary':r['portal_synopsis'].split(":")[1], 'Rpms':str(rpm), "CVEs": cves_text })
+def scrape(r):
     
-     return items  
+    items = []
+    html = get_html(r["view_uri"])
+    soup = BeautifulSoup(html,features='html.parser')
+    packages = soup.select_one('#packages')
+    issue_date = soup.select_one('.details').find("dd").text
+    vendor_category = soup.select_one('.print-single').find("h1").text.split("-")[2]
+    category = "General Advisory" if vendor_category == 'Bug Fix Advisory' else vendor_category
+    vendor_rating = r['portal_severity'] if r['portal_severity'] else 'N/A'
+    
+    for product in RHEL_versions:
+
+        if packages:
+            isfound = packages.find(string=RHEL_versions[product])
+            if isfound :   
+                cves_element = soup.select_one("#cves").find("ul")
+                if cves_element:
+                    cves_text = ', '.join([li.text.strip() for li in cves_element.find_all("li")])
+                else:   
+                    cves_text = 'None' 
+                rpms = re.findall(r'\S+\.rpm',isfound.find_parent().find_next_sibling().text)
+                for rpm in rpms:
+                    #   items.append({'OS':f'RHEL{version}','id':r['id'],'Advisory url': r["view_uri"],'Release Date': r['portal_publication_date'], 'vonder rating':r['portal_severity'], 'summary':r['portal_synopsis'].split(":")[1], 'Rpms':str(rpm), "CVEs": cves_text })
+                    items.append({
+                        'OS': product,
+                        'Release Date': issue_date,
+                        'Category': category,
+                        'Vendor Category': vendor_category,
+                        'Bulletin ID / Patch ID': r['id'], 
+                        'RPMs':str(rpm),
+                        'CVEs':cves_text ,
+                        'Bulletin Title and Executive Summary':r['portal_synopsis'].split(":")[1],
+                        'Vendor Rating': vendor_rating,
+                        'Atos Rating':'N/A',
+                        'Tested':'NO',
+                        'Exception':'NO',
+                        'Announcement links':r["view_uri"]
+                    })
+            
+    return items  
 
 
 def select(api): 

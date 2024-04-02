@@ -1,5 +1,6 @@
 from datetime import datetime
 import time
+import sys
 import requests
 import logging
 from bs4 import BeautifulSoup
@@ -105,7 +106,7 @@ def transform(data):
      if data : 
         log.info('saving data into excel ...')
         df = pd.DataFrame(data)
-        filename = str(getcurrentdate()) + "-generated.xlsx"
+        filename = str(getcurrentdate()) + "-vmware-generated.xlsx"
         df.to_excel(filename, index=False)
         log.info('Done saving data ! ')    
      else:
@@ -118,7 +119,7 @@ def getcurrentdate():
 
 def main():
 
-    currentdate = "2023-10"
+    currentdate = str(sys.argv[1])
     initialtime  = time.time()
     url = f"https://www.vmware.com/bin/vmware/getmodernizeadvisorieslist?resourcePath=/content/vmware/vmware-published-sites/us/security/advisories&searchText={currentdate}"
     
