@@ -74,7 +74,8 @@ def Query():
     
      return url_tools.quote_plus(qdate)
 
-   
+def is_valide_link(link):
+    return "https://access.redhat.com/errata/" in link 
 
 def extract(raw):
     data = []
@@ -86,45 +87,56 @@ def extract(raw):
    
 
 def scrape(r):
-    
     items = []
-    html = get_html(r["view_uri"])
-    soup = BeautifulSoup(html,features='html.parser')
-    packages = soup.select_one('#packages')
-    issue_date = soup.select_one('.details').find("dd").text
-    vendor_category = soup.select_one('.print-single').find("h1").text.split("-")[2]
-    category = "General Advisory" if vendor_category == 'Bug Fix Advisory' else vendor_category
-    vendor_rating = r['portal_severity'] if r['portal_severity'] else 'N/A'
-    
-    for product in RHEL_versions:
+    if is_valide_link(r['view_uri']):
+        html = get_html(r["view_uri"])
+        soup = BeautifulSoup(html,features='html.parser')
+        packages = soup.select_one('#packages')
+        issue_date = soup.select_one('.details').find("dd").text
+        vendor_category = soup.select_one('.print-single').find("h1").text.split("-")[2]
+       
+        if vendor_category.strip() == "Security Advisory":
+           category = vendor_category
+        else: 
+            category = "General Advisory" 
 
-        if packages:
-            isfound = packages.find(string=RHEL_versions[product])
-            if isfound :   
-                cves_element = soup.select_one("#cves").find("ul")
-                if cves_element:
-                    cves_text = ', '.join([li.text.strip() for li in cves_element.find_all("li")])
-                else:   
-                    cves_text = 'None' 
-                rpms = re.findall(r'\S+\.rpm',isfound.find_parent().find_next_sibling().text)
-                for rpm in rpms:
-                    #   items.append({'OS':f'RHEL{version}','id':r['id'],'Advisory url': r["view_uri"],'Release Date': r['portal_publication_date'], 'vonder rating':r['portal_severity'], 'summary':r['portal_synopsis'].split(":")[1], 'Rpms':str(rpm), "CVEs": cves_text })
-                    items.append({
-                        'OS': product,
-                        'Release Date': issue_date,
-                        'Category': category,
-                        'Vendor Category': vendor_category,
-                        'Bulletin ID / Patch ID': r['id'], 
-                        'RPMs':str(rpm),
-                        'CVEs':cves_text ,
-                        'Bulletin Title and Executive Summary':r['portal_synopsis'].split(":")[1],
-                        'Vendor Rating': vendor_rating,
-                        'Atos Rating':'N/A',
-                        'Tested':'NO',
-                        'Exception':'NO',
-                        'Announcement links':r["view_uri"]
-                    })
-            
+        vendor_rating = r['portal_severity'] if r['portal_severity'] else 'N/A'
+        
+        if r['portal_severity'] == "None":
+            summary =  r['portal_synopsis']
+        else:
+            summary =r['portal_synopsis'].split(":")[1]
+        
+        for product in RHEL_versions:
+
+            if packages:
+                isfound = packages.find(string=RHEL_versions[product])
+                if isfound :   
+                    cves_element = soup.select_one("#cves").find("ul")
+                    if cves_element:
+                        cves_text = ', '.join([li.text.strip() for li in cves_element.find_all("li")])
+                    else:   
+                        cves_text = 'None' 
+                    rpms = re.findall(r'\S+\.rpm',isfound.find_parent().find_next_sibling().text)
+                    for rpm in rpms:
+                        #   items.append({'OS':f'RHEL{version}','id':r['id'],'Advisory url': r["view_uri"],'Release Date': r['portal_publication_date'], 'vonder rating':r['portal_severity'], 'summary':r['portal_synopsis'].split(":")[1], 'Rpms':str(rpm), "CVEs": cves_text })
+                        items.append({
+                            'OS': product,
+                            'Release Date': issue_date,
+                            'Category': category,
+                            'Vendor Category': vendor_category,
+                            'Bulletin ID / Patch ID': r['id'], 
+                            'RPMs':str(rpm),
+                            'CVEs':cves_text ,
+                            'Bulletin Title and Executive Summary': summary,
+                            'Vendor Rating': vendor_rating,
+                            'Atos Rating':'N/A',
+                            'Tested':'NO',
+                            'Exception':'NO',
+                            'Announcement links':r["view_uri"]
+                        })
+    else:
+        log.warning('invalid link ! :  %s', r["view_uri"])        
     return items  
 
 
@@ -137,8 +149,8 @@ def main():
     
     fq = Query()
     
-    api = f"https://access.redhat.com/hydra/rest/search/kcs?q=Red+Hat+Enterprise+Linux&start=0&hl=true&hl.fl=abstract&hl.simple.pre=%253Cmark%253E&hl.simple.post=%253C%252Fmark%253E&fq=portal_advisory_type%3A%28%22Security+Advisory%22%29+AND+documentKind%3A%28%22Errata%22%29&facet=true&facet.mincount=1&rows=1&fl=id%2Cportal_severity%2Cportal_product_names%2Cportal_publication_date%2Cportal_synopsis%2Cview_uri%2CallTitle&sort=portal_publication_date+desc&p=1&facet.field=portal_severity&facet.field=portal_advisory_type&fq={fq}&facet.range.end=NOW&facet.range.start=NOW%2FYEAR-15YEARS&facet.range.gap=%2B1YEAR"   
-        
+    api = f"https://access.redhat.com/hydra/rest/search/kcs?q=Red+Hat+Enterprise+Linux&start=0&hl=true&hl.fl=abstract&hl.simple.pre=%253Cmark%253E&hl.simple.post=%253C%252Fmark%253E&facet=true&facet.mincount=1&rows=1&fl=id%2Cportal_severity%2Cportal_product_names%2Cportal_publication_date%2Cportal_synopsis%2Cview_uri%2CallTitle&sort=portal_publication_date+desc&p=1&facet.field=portal_severity&facet.field=portal_advisory_type&fq={fq}&facet.range.end=NOW&facet.range.start=NOW%2FYEAR-15YEARS&facet.range.gap=%2B1YEAR"   
+       
     rows = select(api) 
 
     url = api.replace("rows=1", f"rows={rows}")

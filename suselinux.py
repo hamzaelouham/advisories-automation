@@ -22,6 +22,17 @@ patching_date = datetime.now(timezone.utc) - relativedelta(months=1)
 uri = f'https://lists.suse.com/pipermail/sle-updates/{patching_date.year}-{patching_date.strftime("%B")}/'
 url = uri+'date.html'
 
+SLES = {
+    "SLES 15":"SUSE Linux Enterprise Server 15 SP5",
+    "SLES 15":"SUSE Linux Enterprise Module for Basesystem 15-SP5",
+    "SLES 15":"Basesystem Module 15-SP5",
+    "SLES 12":"SUSE Linux Enterprise Server 12 SP5",
+    "SLES 12":"SUSE Linux Enterprise Module for Basesystem 12-SP5",
+    "SLES 12":"Basesystem Module 12-SP5",
+    "SLES 12":"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
+}
+
+
 def get_html(url):
     try:
         log.info('Sending request to URL: %s', url)
@@ -59,8 +70,20 @@ def scrape_page(link):
     severity = title[2]
     summary = title[3]
     category = "Security Advisory" if title[0].startswith('SUSE-SU') else "General Advisory"
-    print(category)
+    issue_date = datetime.strptime(soup.find("i").text.strip(), "%a %b %d %H:%M:%S %Z %Y").strftime("%d-%m-%Y")  
+    content = soup.find("pre").text
+    cve_pattern = r"CVE-\d{4}-\d+"
     
+    if list(dict.fromkeys(re.findall(cve_pattern, content))):
+        cves = ', '.join(list(dict.fromkeys(re.findall(cve_pattern, content))))
+    else:
+        cves = "N/A"
+       
+    
+    print(cves)
+
+
+
 
 
 def trans_to_Execl(data):

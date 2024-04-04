@@ -1,14 +1,10 @@
-rd category vendor category id rpms CVEs summary vonder rating link
+https://access.redhat.com/hydra/rest/search/kcs?q=*%3A*&start=50&hl=true&hl.fl=abstract&hl.simple.pre=%253Cmark%253E&hl.simple.post=%253C%252Fmark%253E&fq=%7B%21tag%3Date%7Dportal_publication_date%3A%28%5B2024-01-01T00%3A00%3A00.000Z+TO+2024-01-01T00%3A00%3A00.000Z%2B1YEAR%5D%29+AND+documentKind%3A%28%22Errata%22%29&facet=true&facet.mincount=1&facet.range=%7B%21ex%3Date%7Dportal_publication_date&facet.range.end=NOW&facet.range.gap=%2B1YEAR&facet.range.start=NOW%2FYEAR-15YEARS&rows=1&fl=id%2Cportal_severity%2Cportal_advisory_type%2Cportal_product_names%2Cportal_publication_date%2Cportal_synopsis%2Cview_uri%2CallTitle&sort=portal_publication_date+desc&p=5&facet.field=portal_advisory_type&facet.field=portal_severity&fq=portal_product_filter%3A*%7C*
 
- 
-redhat 8: https://access.redhat.com/hydra/rest/search/kcs?q=*%3A*&start=0&hl=true&hl.fl=abstract&hl.simple.pre=%253Cmark%253E&hl.simple.post=%253C%252Fmark%253E&fq=portal_advisory_type%3A%28%22Security+Advisory%22%29+AND+documentKind%3A%28%22Errata%22%29&facet=true&facet.mincount=1&rows=10&fl=id%2Cportal_severity%2Cportal_product_names%2Cportal_publication_date%2Cportal_synopsis%2Cview_uri%2CallTitle&sort=portal_publication_date+desc&p=138&facet.field=portal_severity&facet.field=portal_advisory_type&fq=portal_product_filter%3ARed%5C+Hat%5C+Enterprise%5C+Linux%7CRed%5C+Hat%5C+Enterprise%5C+Linux%5C+for%5C+x86_64%7C8%7Cx86_64&facet.range.end=NOW&facet.range.start=NOW%2FYEAR-15YEARS&facet.range.gap=%2B1YEAR
-redhat 9: https://access.redhat.com/hydra/rest/search/kcs?q=*%3A*&start=0&hl=true&hl.fl=abstract&hl.simple.pre=%253Cmark%253E&hl.simple.post=%253C%252Fmark%253E&fq=portal_advisory_type%3A%28%22Security+Advisory%22%29+AND+documentKind%3A%28%22Errata%22%29&facet=true&facet.mincount=1&rows=10&fl=id%2Cportal_severity%2Cportal_product_names%2Cportal_publication_date%2Cportal_synopsis%2Cview_uri%2CallTitle&sort=portal_publication_date+desc&p=1&facet.field=portal_severity&facet.field=portal_advisory_type&fq=portal_product_filter%3ARed%5C+Hat%5C+Enterprise%5C+Linux%7CRed%5C+Hat%5C+Enterprise%5C+Linux%5C+for%5C+x86_64%7C9%7Cx86_64
+# api = f'https://access.redhat.com/hydra/rest/search/kcs?q=*%3A*&start=50&hl=true&hl.fl=abstract&hl.simple.pre=%253Cmark%253E&hl.simple.post=%253C%252Fmark%253E&fq={fq}&facet=true&facet.mincount=1&facet.range=%7B%21ex%3Date%7Dportal_publication_date&facet.range.end=NOW&facet.range.gap=%2B1YEAR&facet.range.start=NOW%2FYEAR-15YEARS&rows=1&fl=id%2Cportal_severity%2Cportal_advisory_type%2Cportal_product_names%2Cportal_publication_date%2Cportal_synopsis%2Cview_uri%2CallTitle&sort=portal_publication_date+desc&p=5&facet.field=portal_advisory_type&facet.field=portal_severity'
+portal_advisory_type:('Security Advisory') AND portal_product_filter:Red\ Hat\ Enterprise\ Linux|*|*|x86_64
 
+&fq=portal_advisory_type%3A%28%22Security+Advisory%22%29+AND+documentKind%3A%28%22Errata%22%29
 
-
-portal_advisory_type:('Security Advisory') AND
-
-            
     # else:
     #     scraped.append({'OS':f'OL{version}','id':aid,'Advisory link': link,'type':Type ,'Release Date': Release_Date, 'vonder rating':Severity, 'summary':summary, 'Rpms': 'None', "CVEs": Cves })
     #     log.warn(f'No Rpms found for Oracle Linux {version}')
@@ -29,6 +25,4 @@ RHEL   8.8	    Red Hat Enterprise Linux for x86_64 - Update Services for SAP Sol
 
 
 
-
-
-p=105:21::::RP::
+ 
