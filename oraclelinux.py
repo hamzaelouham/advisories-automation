@@ -52,8 +52,11 @@ def scrape_single_page(link):
     Type = tables[0].find_all('tr')[0].find_all('td')[1].text.strip()
     Severity = tables[0].find_all('tr')[1].find_all('td')[1].text.strip()
     Release_Date = tables[0].find_all('tr')[2].find_all('td')[1].text.strip()
-    Cves =  ', '.join([td.text.strip() for td in tables[1].find_all("tr")])
-    category = "General Advisory" if Type == 'BUG' else "Security Advisory"
+    if len(tables[1].find_all("tr")) == 0:
+        Cves =  'N/A'
+    else:
+        Cves =  ', '.join([td.text.strip() for td in tables[1].find_all("tr")])
+    category = "Security Advisory" if Type == 'Security Advisory' else  "General Advisory"
        
     for product in oraclelinux:
        element_found = soup.find('td',string=oraclelinux[product]) 
@@ -62,7 +65,7 @@ def scrape_single_page(link):
           
           start_row = element_found.find_parent() 
           data.append({
-                        'OS': product,
+                        'OS': product.split('_')[0],
                         'Release Date': Release_Date,
                         'Category': category,
                         'Vendor Category': Type,
@@ -80,7 +83,7 @@ def scrape_single_page(link):
           for tr in start_row.find_all_next('tr'):
               if len(tr) >= 2: 
                  data.append({
-                        'OS': product,
+                        'OS': product.split('_')[0],
                         'Release Date': Release_Date,
                         'Category': category,
                         'Vendor Category': Type,
@@ -97,6 +100,7 @@ def scrape_single_page(link):
               
               else:
                  break
+    
     return data
 
 def scrape_pages(url):
@@ -106,9 +110,12 @@ def scrape_pages(url):
     table = soup.find('table',class_="report-standard-alternatingrowcolors")
     rows = table.find_all("tr",class_="highlight-row")
     data = []
-
+    page_count = 1
+    pages_count = len(rows)
     for row in rows :
-       data.append(scrape_single_page("https://linux.oracle.com" + row.select_one('td[headers="ADVISORY_ID"] a')['href'])) 
+       data.extend(scrape_single_page("https://linux.oracle.com" + row.select_one('td[headers="ADVISORY_ID"] a')['href'])) 
+       log.info('successfully scraping page %d/%d',page_count, pages_count)
+       page_count = page_count + 1 
     return data
 
 
@@ -124,7 +131,9 @@ def main():
     df['Release Date'] = pd.to_datetime(df['Release Date'], format='%Y-%m-%d')
     filtered_df = df[df['Release Date'].dt.month == last_month]
     # save scraped date into execl sheet
+    filtered_df['Release Date'] = filtered_df['Release Date'].dt.strftime('%d/%m/%Y')
     filtered_df.to_excel('OL-generated.xlsx', index=False)
+    # df.to_excel('OL-generated.xlsx', index=False)
     log.info('successful finishing. Time taken: %.2f seconds' ,time.time() - initialtime)
     
 if __name__ == "__main__":
