@@ -16,7 +16,12 @@ headers = {
    "User-Agent":'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36'
 }
 
-
+oraclelinux = {
+    "OL7_aarch64" :"Oracle Linux 7 (aarch64)",
+    "OL7_x86_64"  :"Oracle Linux 7 (x86_64)",
+    "OL8_aarch64" :"Oracle Linux 8 (aarch64)",
+    "OL8_x86_64"  :"Oracle Linux 8 (x86_64)",
+}
 
 def get_html(url): 
     
@@ -35,14 +40,12 @@ def get_html(url):
         log.error('Error during request: %s', error)
         return
 
-    
-# Oracle Linux 9 (x86_64)
-           
-def scrape(link, version):
 
+def scrape_single_page(link):
+    data = []
     html = get_html(link) 
     soup = BeautifulSoup(html,features='html.parser')
-    aid = soup.find('li',string=lambda text: text and (text.startswith('ELEA') or text.startswith('ELSA')or text.startswith('ELBA'))).text.strip()
+    id = soup.find('li',string=lambda text: text and (text.startswith('ELEA') or text.startswith('ELSA')or text.startswith('ELBA'))).text.strip()
     container = soup.find('div', class_="mc10 mc10v6")
     summary = container.find('h2').text.strip().split(' - ')[1]
     tables = container.find_all('table')
@@ -51,18 +54,19 @@ def scrape(link, version):
     Release_Date = tables[0].find_all('tr')[2].find_all('td')[1].text.strip()
     Cves =  ', '.join([td.text.strip() for td in tables[1].find_all("tr")])
     category = "General Advisory" if Type == 'BUG' else "Security Advisory"
-    scraped = []
-    start_row = None
-    
-    if soup.find('td',string=f"Oracle Linux {version} (x86_64)"):
-        start_row = soup.find('td',string=f"Oracle Linux {version} (x86_64)").find_parent()
-        # scraped.append({'OS':f'OL{version}','id':aid,'Advisory link': link,'type':Type ,'Release Date': Release_Date, 'vonder rating':Severity, 'summary':summary, 'Rpms': start_row.find_all('td')[1].text.strip(), "CVEs": Cves })
-        scraped.append({
-                        'OS': f'OL{version}',
+       
+    for product in oraclelinux:
+       element_found = soup.find('td',string=oraclelinux[product]) 
+
+       if element_found: 
+          
+          start_row = element_found.find_parent() 
+          data.append({
+                        'OS': product,
                         'Release Date': Release_Date,
                         'Category': category,
                         'Vendor Category': Type,
-                        'Bulletin ID / Patch ID': aid, 
+                        'Bulletin ID / Patch ID': id, 
                         'RPMs': start_row.find_all('td')[1].text.strip(),
                         'CVEs':Cves ,
                         'Bulletin Title and Executive Summary':summary,
@@ -72,24 +76,16 @@ def scrape(link, version):
                         'Exception':'NO',
                         'Announcement links': link
             })
-        
-        rpms = start_row.find_all_next('tr')
-        #Extract rpms from the target rows in table
-        for rpm in rpms:
-            rpm_elements = rpm.find_all('td')
-            # rpm.find_all('td')[1].text.strip()
-            if len(rpm_elements) >= 2:
-                rpms_value = rpm_elements[1].text.strip()
-            else:
-                rpms_value = "N/A"
-              
-            scraped.append({
-                        'OS': f'OL{version}',
+       
+          for tr in start_row.find_all_next('tr'):
+              if len(tr) >= 2: 
+                 data.append({
+                        'OS': product,
                         'Release Date': Release_Date,
                         'Category': category,
-                         'Vendor Category': Type,
-                        'Bulletin ID / Patch ID': aid, 
-                        'RPMs':str(rpms_value),
+                        'Vendor Category': Type,
+                        'Bulletin ID / Patch ID': id, 
+                        'RPMs': tr.find_all('td')[1].text.strip(),
                         'CVEs':Cves ,
                         'Bulletin Title and Executive Summary':summary,
                         'Vendor Rating': Severity,
@@ -97,51 +93,40 @@ def scrape(link, version):
                         'Tested':'NO',
                         'Exception':'NO',
                         'Announcement links': link
-            })
-    return scraped
-        
-
-def extract(links):
-    rlink = 1
-    data = []
-    for link in links:
-       print(f'Getting : {rlink}/{len(links)} row')
-       data.extend(scrape(link, 7))
-       data.extend(scrape(link, 8))
-       rlink = rlink + 1    
+                    })
+              
+              else:
+                 break
     return data
-       
 
-def get_links(html):
+def scrape_pages(url):
     
-    links = []
+    html = get_html(url)
     soup = BeautifulSoup(html,features='html.parser') 
     table = soup.find('table',class_="report-standard-alternatingrowcolors")
     rows = table.find_all("tr",class_="highlight-row")
+    data = []
+
     for row in rows :
-       links.append("https://linux.oracle.com" + row.select_one('td[headers="ADVISORY_ID"] a')['href'])
-    
-    return links
+       data.append(scrape_single_page("https://linux.oracle.com" + row.select_one('td[headers="ADVISORY_ID"] a')['href'])) 
+    return data
+
 
 def main():
 
     initialtime  = time.time()
-    
     max_rows = str(sys.argv[1])
     url = f'https://linux.oracle.com/ords/f?p=105:21:3414613945235:pg_R_1213672130548773998:NO&pg_min_row=1&pg_max_rows={max_rows}&pg_rows_fetched={max_rows}'
-    html = get_html(url)
-    links = get_links(html)
-    data = extract(links)
-    # save scraped date into execl sheet
+    data = scrape_pages(url)
+  
     df = pd.DataFrame(data)
     last_month = pd.Timestamp('today').month - 1
     df['Release Date'] = pd.to_datetime(df['Release Date'], format='%Y-%m-%d')
     filtered_df = df[df['Release Date'].dt.month == last_month]
     # save scraped date into execl sheet
     filtered_df.to_excel('OL-generated.xlsx', index=False)
-
     log.info('successful finishing. Time taken: %.2f seconds' ,time.time() - initialtime)
-
+    
 if __name__ == "__main__":
      main()
 
