@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 import time
 import requests
+import markdown
 import logging
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -22,15 +23,16 @@ patching_date = datetime.now(timezone.utc) - relativedelta(months=1)
 uri = f'https://lists.suse.com/pipermail/sle-updates/{patching_date.year}-{patching_date.strftime("%B")}/'
 url = uri+'date.html'
 
-SLES = {
-    "SLES 15":"SUSE Linux Enterprise Server 15 SP5",
-    "SLES 15":"SUSE Linux Enterprise Module for Basesystem 15-SP5",
-    "SLES 15":"Basesystem Module 15-SP5",
-    "SLES 12":"SUSE Linux Enterprise Server 12 SP5",
-    "SLES 12":"SUSE Linux Enterprise Module for Basesystem 12-SP5",
-    "SLES 12":"Basesystem Module 12-SP5",
-    "SLES 12":"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
+suselinux = {
+    "SLES 15_1":"SUSE Linux Enterprise Server 15 SP5",
+    "SLES 15_2":"SUSE Linux Enterprise Server for SAP Applications 15 SP4",
+    "SLES 15_3":"Basesystem Module 15-SP5",
+    "SLES 12_4":"SUSE Linux Enterprise Server 12 SP5",
+    "SLES 12_5":"SUSE Linux Enterprise Module for Basesystem 12-SP5",
+    "SLES 12_6":"Basesystem Module 12-SP5",
+    "SLES 12_7":"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
 }
+
 
 
 def get_html(url):
@@ -54,15 +56,22 @@ def extract():
     log.info('start Extract & scraping data')
     soup = BeautifulSoup(html,features='html.parser')
     ul = soup.find_all("ul")[1]
-    # data = []
+    extracted_data = []
     for li in ul.find_all("li"):
         link = uri + li.find('a')['href']
-        scrape_page(link)
-        # data.append()
+        extracted_data.extend(scrape_page(link))
+        
+    return extracted_data
 
-    # return data
+
+def text_to_html(text):
+    html = markdown.markdown(text)
+    return BeautifulSoup(html,features='html.parser')
+
+   
 
 def scrape_page(link):
+    data = []
     html = get_html(link)
     soup = BeautifulSoup(html,features='html.parser')
     title = soup.find("h1").text.strip().split(':')
@@ -73,22 +82,45 @@ def scrape_page(link):
     issue_date = datetime.strptime(soup.find("i").text.strip(), "%a %b %d %H:%M:%S %Z %Y").strftime("%d-%m-%Y")  
     content = soup.find("pre").text
     cve_pattern = r"CVE-\d{4}-\d+"
-    
+    match = re.search(r'## Package List:(.*?)## References:', content, re.DOTALL)
     if list(dict.fromkeys(re.findall(cve_pattern, content))):
         cves = ', '.join(list(dict.fromkeys(re.findall(cve_pattern, content))))
     else:
         cves = "N/A"
-       
-    
-    print(cves)
+    if match is not None and match.group(1).strip():
+       text = match.group(1).strip()
+       html = text_to_html(text)
+       ul = html.find('ul')
 
-
-
-
+       for li in ul.find_all("li"):
+           for product in suselinux: 
+               if li.text.startswith(suselinux[product]): 
+                                  
+                  for rpm in li.find_all('li'):
+                    data.append({
+                        'OS': product.split('_')[0],
+                        'Release Date': issue_date,
+                        'Category': category,
+                        'Vendor Category': category,
+                        'Bulletin ID / Patch ID': id, 
+                        'RPMs': rpm.text.strip(),
+                        'CVEs': cves ,
+                        'Bulletin Title and Executive Summary':summary,
+                        'Vendor Rating': severity,
+                        'Atos Rating':'N/A',
+                        'Tested':'NO',
+                        'Exception':'NO',
+                        'Announcement links': link
+                    }) 
+    return data
 
 def trans_to_Execl(data):
      df = pd.DataFrame(data)
      df.to_excel('suse-generated.xlsx', index=False) 
+    
+
+
+           
 
 
 def main():
@@ -97,15 +129,14 @@ def main():
     
     # extracrt & scraping data 
   
-    extract()
-    # trans_to_Execl(scrape(html))
+    trans_to_Execl(extract())
+ 
     log.info('successful finishing. Time taken: %.2f seconds' ,time.time() - initialtime)
 
 
 if __name__ == "__main__":
      main()
-
-
+    # scrape_page("https://lists.suse.com/pipermail/sle-updates/2024-March/034500.html")
 
 
 
