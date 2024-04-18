@@ -120,9 +120,6 @@ def trans_to_Execl(data):
     
 
 
-           
-
-
 def main():
     initialtime  = time.time()
    
@@ -135,8 +132,8 @@ def main():
 
 
 if __name__ == "__main__":
-     main()
-    # scrape_page("https://lists.suse.com/pipermail/sle-updates/2024-March/034500.html")
+    main()
+    
 
 
 
