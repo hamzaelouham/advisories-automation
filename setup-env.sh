@@ -13,6 +13,7 @@ else
 fi
 
 venv_dir=venv
+mkdir collected
 
 if [ -d "$venv_dir" ]; then
     echo "**** environment already setup ****"
