@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 import urllib.parse as url_tools 
 from dateutil.relativedelta import relativedelta
 import re
-
+import os
 
 # Configure the loggin
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -20,6 +20,7 @@ headers = {
    "User-Agent":'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36'
 }
 
+last_month = datetime.now(timezone.utc) - relativedelta(months=1)
 
 RHEL_versions = {
     "RHEL 7":"Red Hat Enterprise Linux Server 7",
@@ -69,7 +70,7 @@ def get_html(url):
 def Query():
     #  last_month = datetime.now(timezone.utc) - relativedelta(months=1)
      current_month = datetime.now(timezone.utc) 
-     last_month = datetime.now(timezone.utc) - relativedelta(months=1)
+    
      qdate = f"{{!tag=ate}}portal_publication_date:([{last_month.strftime('%Y-%m-01T00:00:00.000Z')} TO {current_month.strftime('%Y-%m-01T00:00:00.000Z')}]) AND portal_product_filter:Red\ Hat\ Enterprise\ Linux|*|*|x86_64"
     
      return url_tools.quote_plus(qdate)
@@ -92,7 +93,7 @@ def scrape(r):
         html = get_html(r["view_uri"])
         soup = BeautifulSoup(html,features='html.parser')
         packages = soup.select_one('#packages')
-        issue_date = soup.select_one('.details').find("dd").text
+        issue_date = datetime.strptime(soup.select_one('.details').find("dd").text, '%Y-%m-%d').strftime('%d-%m-%Y')
         vendor_category = soup.select_one('.print-single').find("h1").text.split("-")[2]
        
         if vendor_category.strip() == "Security Advisory":
@@ -139,6 +140,17 @@ def scrape(r):
         log.warning('invalid link ! :  %s', r["view_uri"])        
     return items  
 
+def save_data(data):
+    df = pd.DataFrame(data)
+    folder = 'collected'
+    df_sorted = df.sort_values(by='OS')
+    file_name = f'Redhat-Generated-Month-{last_month .strftime("%B")}.xlsx'
+    path = os.path.join(folder, file_name)
+    if not os.path.exists(folder):
+       os.makedirs(folder)
+    df_sorted.to_excel(path, index=False) 
+
+    # save scraped date into execl sheet
 
 def select(api): 
     return get_json(api)['response']['numFound']
@@ -162,13 +174,8 @@ def main():
     log.info('start Extract & scraping data')
 
     data = extract(raw_data)
+    save_data(data)     
 
-    df = pd.DataFrame(data)
-
-    df_sorted = df.sort_values(by='OS')
-    # save scraped date into execl sheet
-    df_sorted.to_excel('redhat-generated.xlsx', index=False) 
-     
     log.info('successful finishing. Time taken: %.2f seconds' ,time.time() - initialtime)
 
 if __name__ == "__main__":

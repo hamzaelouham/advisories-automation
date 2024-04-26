@@ -1,10 +1,12 @@
 from datetime import datetime, timezone
+from dateutil.relativedelta import relativedelta
 import time
 import requests 
 import pandas as pd
 import logging
 from bs4 import BeautifulSoup
 import sys
+import os
 # import urllib.parse as url_tools 
 # from dateutil.relativedelta import relativedelta
 
@@ -12,6 +14,7 @@ import sys
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 log = logging.getLogger("logger")
 request = requests.Session()
+last_month = datetime.now(timezone.utc) - relativedelta(months=1)
 headers = {
    "User-Agent":'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36'
 }
@@ -119,6 +122,23 @@ def scrape_pages(url):
     return data
 
 
+def save_data(data):
+    folder = 'collected'
+    df = pd.DataFrame(data)
+    last_month = pd.Timestamp('today').month - 1
+    df['Release Date'] = pd.to_datetime(df['Release Date'], format='%Y-%m-%d')
+    filtered_df = df[df['Release Date'].dt.month == last_month]
+    # save scraped date into execl sheet
+    patch_date = datetime.now(timezone.utc) - relativedelta(months=1)
+    filtered_df['Release Date'] = filtered_df['Release Date'].dt.strftime('%d/%m/%Y')
+    file_name = f'OL-Generated-Month-{patch_date.strftime("%B")}.xlsx'
+    path = os.path.join(folder, file_name)
+    if not os.path.exists(folder):
+       os.makedirs(folder)
+    filtered_df.to_excel(path, index=False) 
+
+  
+
 def main():
 
     initialtime  = time.time()
@@ -126,14 +146,8 @@ def main():
     url = f'https://linux.oracle.com/ords/f?p=105:21:3414613945235:pg_R_1213672130548773998:NO&pg_min_row=1&pg_max_rows={max_rows}&pg_rows_fetched={max_rows}'
     data = scrape_pages(url)
   
-    df = pd.DataFrame(data)
-    last_month = pd.Timestamp('today').month - 1
-    df['Release Date'] = pd.to_datetime(df['Release Date'], format='%Y-%m-%d')
-    filtered_df = df[df['Release Date'].dt.month == last_month]
-    # save scraped date into execl sheet
-    filtered_df['Release Date'] = filtered_df['Release Date'].dt.strftime('%d/%m/%Y')
-    filtered_df.to_excel('OL-generated.xlsx', index=False)
-    # df.to_excel('OL-generated.xlsx', index=False)
+    save_data(data)
+    
     log.info('successful finishing. Time taken: %.2f seconds' ,time.time() - initialtime)
     
 if __name__ == "__main__":
