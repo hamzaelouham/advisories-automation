@@ -7,6 +7,7 @@ import pandas as pd
 from bs4 import BeautifulSoup
 from dateutil.relativedelta import relativedelta
 import re
+import os
 
 # Configure the loggin
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -114,19 +115,25 @@ def scrape_page(link):
                     }) 
     return data
 
-def trans_to_Execl(data):
+
+def save_data(data):
      df = pd.DataFrame(data)
-     df.to_excel('suse-generated.xlsx', index=False) 
+     df["Release Date"] = pd.to_datetime(df['Release Date'],format='%d-%m-%Y').dt.date
+     folder = 'collected'
+     df_sorted = df.sort_values(by='OS')
+     file_name = f'Suse-Generated-Month-{patching_date.strftime("%B")}.xlsx'
+     path = os.path.join(folder, file_name)
+     if not os.path.exists(folder):
+       os.makedirs(folder)
+     df_sorted.to_excel(path, index=False) 
     
-
-
 def main():
     initialtime  = time.time()
    
     
     # extracrt & scraping data 
   
-    trans_to_Execl(extract())
+    save_data(extract())
  
     log.info('successful finishing. Time taken: %.2f seconds' ,time.time() - initialtime)
 

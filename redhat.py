@@ -145,7 +145,7 @@ def save_data(data):
     df["Release Date"] = pd.to_datetime(df['Release Date'],format='%d-%m-%Y').dt.date
     folder = 'collected'
     df_sorted = df.sort_values(by='OS')
-    file_name = f'Redhat-Generated-Month-{last_month .strftime("%B")}.xlsx'
+    file_name = f'Redhat-Generated-Month-{last_month.strftime("%B")}.xlsx'
     path = os.path.join(folder, file_name)
     if not os.path.exists(folder):
        os.makedirs(folder)
