@@ -126,7 +126,7 @@ def save_data(data):
     folder = 'collected'
     df = pd.DataFrame(data)
     last_month = pd.Timestamp('today').month - 1
-    df['Release Date'] = pd.to_datetime(df['Release Date'], format='%Y-%m-%d')
+    df['Release Date'] = pd.to_datetime(df['Release Date'], dayfirst=True)
     filtered_df = df[df['Release Date'].dt.month == last_month]
     # save scraped date into execl sheet
     patch_date = datetime.now(timezone.utc) - relativedelta(months=1)

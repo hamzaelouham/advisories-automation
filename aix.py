@@ -103,6 +103,7 @@ def scrape_page(r):
 
 def save_data(data):
     df = pd.DataFrame(data)
+    df["Release Date"] = pd.to_datetime(df['Release Date'], dayfirst=True).dt.date
     folder = 'collected'
     df_sorted = df.sort_values(by='OS')
     file_name = f'AIX-Generated-Month-{last_month.strftime("%B")}.xlsx'

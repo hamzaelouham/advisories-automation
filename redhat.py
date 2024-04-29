@@ -95,7 +95,7 @@ def scrape(r):
         packages = soup.select_one('#packages')
         issue_date = datetime.strptime(soup.select_one('.details').find("dd").text, '%Y-%m-%d').strftime('%d-%m-%Y')
         vendor_category = soup.select_one('.print-single').find("h1").text.split("-")[2]
-       
+        
         if vendor_category.strip() == "Security Advisory":
            category = vendor_category
         else: 
@@ -142,6 +142,7 @@ def scrape(r):
 
 def save_data(data):
     df = pd.DataFrame(data)
+    df["Release Date"] = pd.to_datetime(df['Release Date'],format='%d-%m-%Y').dt.date
     folder = 'collected'
     df_sorted = df.sort_values(by='OS')
     file_name = f'Redhat-Generated-Month-{last_month .strftime("%B")}.xlsx'
