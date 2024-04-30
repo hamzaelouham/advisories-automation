@@ -4,6 +4,9 @@ __pycache__
 generated
 suse.html
 *.log
-collected
+collected/*
+!collected/.gitkeep
 Tested/*
+!Tested/.gitkeep
+
 
