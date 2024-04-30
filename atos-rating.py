@@ -9,6 +9,12 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 log = logging.getLogger("logger")
 
+rating = {
+    'Critical' : 'Ranking-1',
+    'Important': 'Ranking-2',
+    'Moderate' : 'Ranking-3',
+    'Low'      : 'Ranking-4'
+}
 
 def read_file(filename):
     path = os.path.join('Tested', filename)
@@ -50,6 +56,7 @@ def main():
         if row['RPMs'] in tested_rpms:
             log.info('founding Tested package !')
             old_excel.at[index, 'Tested'] = "YES"
+            
             #   old_excel.at[index, 'Tested'] = "YES"
             print(f'{row["RPMs"]} is Tested')
 
