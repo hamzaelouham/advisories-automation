@@ -5,4 +5,5 @@ generated
 suse.html
 *.log
 collected
+Tested/*
 

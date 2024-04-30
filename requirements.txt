@@ -3,7 +3,8 @@ certifi==2023.11.17
 charset-normalizer==3.3.2
 et-xmlfile==1.1.0
 idna==3.6
-numpy==1.26.3
+numpy
+markdown
 openpyxl==3.1.2
 pandas
 python-dateutil==2.8.2
