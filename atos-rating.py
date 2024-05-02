@@ -9,12 +9,23 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 log = logging.getLogger("logger")
 
-rating = {
+ratings = {
     'Critical' : 'Ranking-1',
     'Important': 'Ranking-2',
     'Moderate' : 'Ranking-3',
-    'Low'      : 'Ranking-4'
+    'IMPORTANT': 'Ranking-2',
+    'MODERATE' : 'Ranking-3',
+    'high'     : 'Ranking-2',
+    'medium'   : 'Ranking-3',
+    'Low'      : 'Ranking-4',
+    'N/A'	   : 'Ranking-4'
 }
+ 
+           
+	
+ 
+ 
+
 
 def read_file(filename):
     path = os.path.join('Tested', filename)
@@ -56,8 +67,11 @@ def main():
         if row['RPMs'] in tested_rpms:
             log.info('founding Tested package !')
             old_excel.at[index, 'Tested'] = "YES"
+
+            for rating in ratings:
+                if rating == old_excel.at[index, 'Vendor Rating']:
+                   old_excel.at[index, 'Atos Rating'] = ratings[rating]
             
-            #   old_excel.at[index, 'Tested'] = "YES"
             print(f'{row["RPMs"]} is Tested')
 
     save(old_excel, filter)
