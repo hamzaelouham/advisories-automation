@@ -18,7 +18,8 @@ ratings = {
     'high'     : 'Ranking-2',
     'medium'   : 'Ranking-3',
     'Low'      : 'Ranking-4',
-    'N/A'	   : 'Ranking-4'
+    'N/A'	   : 'Ranking-4',
+    'NA'	   : 'Ranking-4'
 }
  
            
@@ -36,7 +37,7 @@ def read_file(filename):
 
 def read_execl(filename):
     path = os.path.join("collected", filename)
-    return pd.read_excel(path)
+    return pd.read_excel(path,converters={'Vendor Rating':str,'Atos Rating':str})
 
     
 
@@ -58,25 +59,30 @@ def main():
 
     log.info('starting process of rating ...!')
    
-    old_excel = read_execl(execl_name)
-    old_excel = old_excel[old_excel['OS'] == filter]
+    excel = read_execl(execl_name)
+    excel.fillna('NA', inplace=True)
+    old_excel = excel[excel['OS'] == filter]
     tested_rpms = set(read_file(text_file_name))
         # for line in read_file(text_file_name):
-
+    
     for index, row in old_excel.iterrows():
         old_excel.at[index, 'Atos Rating'] = "N/A"
+        tmp = row['Vendor Rating']
         if row['RPMs'] in tested_rpms:
             log.info('founding Tested package !')
             old_excel.at[index, 'Tested'] = "YES"
-
             for rating in ratings:
-                if old_excel.at[index, 'Vendor Rating'] == rating :
+                if tmp == rating :
                    old_excel.at[index, 'Atos Rating'] = ratings[rating]
-            
             print(f'{row["RPMs"]} is Tested')
+   
 
     save(old_excel, filter)
     log.info('successful finishing. Time taken: %.2f seconds' ,time.time() - initialtime)                  
+         
+            
+          
+
                   
                      
 
