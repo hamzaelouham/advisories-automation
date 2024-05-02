@@ -69,7 +69,7 @@ def main():
             old_excel.at[index, 'Tested'] = "YES"
 
             for rating in ratings:
-                if rating == old_excel.at[index, 'Vendor Rating']:
+                if old_excel.at[index, 'Vendor Rating'] == rating :
                    old_excel.at[index, 'Atos Rating'] = ratings[rating]
             
             print(f'{row["RPMs"]} is Tested')
