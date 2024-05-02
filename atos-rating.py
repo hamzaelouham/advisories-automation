@@ -64,6 +64,7 @@ def main():
         # for line in read_file(text_file_name):
 
     for index, row in old_excel.iterrows():
+        old_excel.at[index, 'Atos Rating'] = "N/A"
         if row['RPMs'] in tested_rpms:
             log.info('founding Tested package !')
             old_excel.at[index, 'Tested'] = "YES"
