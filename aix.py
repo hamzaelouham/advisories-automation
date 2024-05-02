@@ -6,8 +6,9 @@ import pandas as pd
 from bs4 import BeautifulSoup
 import urllib.parse as url_tools 
 from dateutil.relativedelta import relativedelta
-import re
+import calendar
 import os
+
 
 # Configure the loggin
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -40,7 +41,6 @@ def get_html(url):
         log.error('Error during request: %s', error)
         return
 
-
 def get_json(url):
     try:
         log.info('Sending request to target URL')
@@ -59,10 +59,12 @@ def get_json(url):
 
 def extract(json):
     data = []
+    year = int(last_month.strftime("%Y"))
+    month = int(last_month.strftime("%m"))
+    last_month_day = get_last_day(year,month)
     df = pd.json_normalize(json)
-
-    start_date = f'{last_month.strftime("%Y")}-{last_month.strftime("%m")}-01'
-    end_date = f'{last_month.strftime("%Y")}-{last_month.strftime("%m")}-31'
+    start_date =  f'{year}-{month}-01'
+    end_date = f'{year}-{month}-{last_month_day}'
     df['field_pub_date'] = pd.to_datetime(df['field_pub_date'])
     mask = (df['field_pub_date'] > start_date) & (df['field_pub_date'] <= end_date)
     df = df.loc[mask]
@@ -70,7 +72,9 @@ def extract(json):
     for index, row in df.iterrows():
         data.extend(scrape_page(row))
     return data    
-       
+
+def get_last_day(y,m):
+     return calendar.monthrange(y, m)[1]       
 
 def scrape_page(r):
     items = []
