@@ -24,6 +24,7 @@ oraclelinux = {
     "OL7_x86_64"  :"Oracle Linux 7 (x86_64)",
     "OL8_aarch64" :"Oracle Linux 8 (aarch64)",
     "OL8_x86_64"  :"Oracle Linux 8 (x86_64)",
+    "OL9_x86_64"  :"Oracle Linux 9 (x86_64)	"
 }
 
 def get_html(url): 
@@ -55,15 +56,19 @@ def scrape_single_page(link):
     Type = tables[0].find_all('tr')[0].find_all('td')[1].text.strip()
     Severity = tables[0].find_all('tr')[1].find_all('td')[1].text.strip()
     Release_Date = tables[0].find_all('tr')[2].find_all('td')[1].text.strip()
+    
     if len(tables[1].find_all("tr")) == 0:
         Cves =  'N/A'
     else:
         Cves =  ', '.join([td.text.strip() for td in tables[1].find_all("tr")])
     category = "Security Advisory" if Type == 'Security Advisory' else  "General Advisory"
-       
-    for product in oraclelinux:
-       element_found = soup.find('td',string=oraclelinux[product]) 
+    
+      
 
+    for product in oraclelinux:
+    #    print("new approach ",tables[2].find('td',string=oraclelinux[product]))
+       element_found = soup.find('td',string=oraclelinux[product]) 
+    #    print("old approach ",element_found)
        if element_found: 
           
           start_row = element_found.find_parent() 
@@ -84,6 +89,7 @@ def scrape_single_page(link):
             })
        
           for tr in start_row.find_all_next('tr'):
+              
               if len(tr) >= 2: 
                  data.append({
                         'OS': product.split('_')[0],
@@ -100,10 +106,12 @@ def scrape_single_page(link):
                         'Exception':'NO',
                         'Announcement links': link
                     })
+                 
               
               else:
                  break
-    
+                
+      
     return data
 
 def scrape_pages(url):
@@ -120,17 +128,20 @@ def scrape_pages(url):
        log.info('successfully scraping page %d/%d',page_count, pages_count)
        page_count = page_count + 1 
     return data
+         
+    
 
 
 def save_data(data):
     folder = 'collected'
+    # print(data)
     df = pd.DataFrame(data)
     last_month = pd.Timestamp('today').month - 1
-    df['Release Date'] = pd.to_datetime(df['Release Date'], dayfirst=True)
+    # print(df) 
+    df['Release Date'] = pd.to_datetime(df['Release Date'])
     filtered_df = df[df['Release Date'].dt.month == last_month]
     # save scraped date into execl sheet
     patch_date = datetime.now(timezone.utc) - relativedelta(months=1)
-    filtered_df['Release Date'] = filtered_df['Release Date'].dt.strftime('%d/%m/%Y')
     file_name = f'OL-Generated-Month-{patch_date.strftime("%B")}.xlsx'
     path = os.path.join(folder, file_name)
     if not os.path.exists(folder):
@@ -145,7 +156,7 @@ def main():
     max_rows = str(sys.argv[1])
     url = f'https://linux.oracle.com/ords/f?p=105:21:3414613945235:pg_R_1213672130548773998:NO&pg_min_row=1&pg_max_rows={max_rows}&pg_rows_fetched={max_rows}'
     data = scrape_pages(url)
-  
+    
     save_data(data)
     
     log.info('successful finishing. Time taken: %.2f seconds' ,time.time() - initialtime)
