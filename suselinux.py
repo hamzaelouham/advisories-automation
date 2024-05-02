@@ -26,7 +26,7 @@ url = uri+'date.html'
 
 suselinux = {
     "SLES 15_1":"SUSE Linux Enterprise Server 15 SP5",
-    "SLES 15_2":"SUSE Linux Enterprise Server for SAP Applications 15 SP4",
+    "SLES 15_2":"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
     "SLES 15_3":"Basesystem Module 15-SP5",
     "SLES 12_4":"SUSE Linux Enterprise Server 12 SP5",
     "SLES 12_5":"SUSE Linux Enterprise Module for Basesystem 12-SP5",
