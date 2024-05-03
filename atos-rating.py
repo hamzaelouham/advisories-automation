@@ -11,13 +11,17 @@ log = logging.getLogger("logger")
 
 ratings = {
     'Critical' : 'Ranking-1',
-    'Important': 'Ranking-2',
+    # 'critical' : 'Ranking-1',
+    # 'Important': 'Ranking-2',
+    # 'important': 'Ranking-2',
     'Moderate' : 'Ranking-3',
+    # 'moderate' : 'Ranking-3',
     'IMPORTANT': 'Ranking-2',
-    'MODERATE' : 'Ranking-3',
+    # 'MODERATE' : 'Ranking-3',
     'high'     : 'Ranking-2',
     'medium'   : 'Ranking-3',
     'Low'      : 'Ranking-4',
+    # 'low'      : 'Ranking-4',
     'N/A'	   : 'Ranking-4',
     'NA'	   : 'Ranking-4'
 }
@@ -37,7 +41,7 @@ def read_file(filename):
 
 def read_execl(filename):
     path = os.path.join("collected", filename)
-    return pd.read_excel(path,converters={'Vendor Rating':str,'Atos Rating':str})
+    return pd.read_excel(path,converters={'Vendor Rating':str,'Atos Rating':str},keep_default_na=False)
 
     
 
@@ -60,21 +64,29 @@ def main():
     log.info('starting process of rating ...!')
    
     excel = read_execl(execl_name)
-    excel.fillna('NA', inplace=True)
+    # excel.fillna('NA', inplace=True)
+    # print(excel.dtypes)
     old_excel = excel[excel['OS'] == filter]
     tested_rpms = set(read_file(text_file_name))
         # for line in read_file(text_file_name):
     
     for index, row in old_excel.iterrows():
         old_excel.at[index, 'Atos Rating'] = "N/A"
-        tmp = row['Vendor Rating']
+        
         if row['RPMs'] in tested_rpms:
             log.info('founding Tested package !')
             old_excel.at[index, 'Tested'] = "YES"
+          
             for rating in ratings:
-                if tmp == rating :
+              
+                if old_excel.at[index, 'Vendor Rating'].strip().upper() == rating.strip().upper() :
                    old_excel.at[index, 'Atos Rating'] = ratings[rating]
+                   print(old_excel.at[index, 'Atos Rating'])
+                   
             print(f'{row["RPMs"]} is Tested')
+
+                  
+
    
 
     save(old_excel, filter)
