@@ -11,19 +11,14 @@ log = logging.getLogger("logger")
 
 ratings = {
     'Critical' : 'Ranking-1',
-    # 'critical' : 'Ranking-1',
-    # 'Important': 'Ranking-2',
-    # 'important': 'Ranking-2',
     'Moderate' : 'Ranking-3',
-    # 'moderate' : 'Ranking-3',
     'IMPORTANT': 'Ranking-2',
-    # 'MODERATE' : 'Ranking-3',
     'high'     : 'Ranking-2',
     'medium'   : 'Ranking-3',
     'Low'      : 'Ranking-4',
-    # 'low'      : 'Ranking-4',
     'N/A'	   : 'Ranking-4',
     'NA'	   : 'Ranking-4'
+
 }
  
            
@@ -87,10 +82,10 @@ def main():
 
                   
 
-   
-
     save(old_excel, filter)
     log.info('successful finishing. Time taken: %.2f seconds' ,time.time() - initialtime)                  
+   
+
          
             
           
