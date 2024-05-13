@@ -3,10 +3,10 @@ import time
 import requests
 import logging
 import pandas as pd
-from bs4 import BeautifulSoup, UnicodeDammit
-import urllib.parse as url_tools 
+from bs4 import BeautifulSoup
 from dateutil.relativedelta import relativedelta
-import re
+import os
+
 
 
 # Configure the loggin
@@ -19,6 +19,8 @@ http = requests.Session()
 url = "https://ubuntu.com"
 
 ubuntu = ('Ubuntu 22.04', 'Ubuntu 20.04')
+
+patching_date = datetime.now(timezone.utc) - relativedelta(months=1)
 
 headers = {
    "User-Agent":'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36'
@@ -140,34 +142,7 @@ def get_amd_link(link):
                package_page_link = 'https://launchpad.net/'+atag.get('href')
            
     return package_page_link, severity           
-# # def scrape(_data):
-  
-#     data = []
-#     package_page_link,severity = get_amd_link(_data["deblink"])
-  
-#     html = get_html(package_page_link)  
-#     soup = BeautifulSoup(html,features='lxml')        
-#     div = soup.find('div', id="files")
-#     if div : 
-#        ul = div.find('ul')
-#        for li in ul.find_all('li'):
-#            print(li.find('a').get_text())
-#            data.append({
-#                         'OS':_data['OS'],
-#                         'Release Date': _data['OS'],
-#                         'Category': "Security Advisory",
-#                         'Vendor Category': "Security Advisory",
-#                         'Bulletin ID / Patch ID': _data['OS'], 
-#                         'RPMs': li.find('a').get_text(),
-#                         'CVEs': _data['CVEs'] ,
-#                         'Bulletin Title and Executive Summary':_data['Bulletin Title and Executive Summary'],
-#                         'Vendor Rating': severity,
-#                         'Atos Rating':'N/A',
-#                         'Tested':'NO',
-#                         'Exception':'NO',
-#                         'Announcement links': _data['Announcement links']
-#                     })  
-#     return data                
+            
 
 def scrape(_data):
     data = []
@@ -207,9 +182,16 @@ def scrape(_data):
     return data
             
 
-def print_data(d):
-    for i in d:
-        print(i)
+def save_data(data):
+     df = pd.DataFrame(data)
+     df["Release Date"] = pd.to_datetime(df['Release Date'],format='%d-%m-%Y').dt.date
+     folder = 'collected'
+     df_sorted = df.sort_values(by='OS')
+     file_name = f'Ubuntu-Generated-Month-{patching_date.strftime("%B")}.xlsx'
+     path = os.path.join(folder, file_name)
+     if not os.path.exists(folder):
+       os.makedirs(folder)
+     df_sorted.to_excel(path, index=False) 
         
         
 
@@ -218,7 +200,7 @@ def main():
     # extracrt & scraping data 
     links = extract_links()
     big_data = extract_pages(links)
-    print_data(big_data)
+    save_data(big_data)
     
     log.info('successful finishing. Time taken: %.2f seconds' ,time.time() - initialtime)
 
