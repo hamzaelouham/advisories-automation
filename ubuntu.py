@@ -65,7 +65,7 @@ def fetch_security_notices(offset):
         log.error('Error during request: %s', error)
         return
 
-def extract_links(date='1/04/2024', current_offset=0):
+def extract_links(current_offset=0):
     links = []
     html = fetch_security_notices(current_offset)
     soup = BeautifulSoup(html, features='lxml')
@@ -74,12 +74,12 @@ def extract_links(date='1/04/2024', current_offset=0):
         pub_date = article.find('p', class_="u-no-margin u-no-padding--top")
         if pub_date:
             parsed_date = parse_date2(pub_date.text.strip())
-            if parsed_date >= datetime(2024, 4, 1).date():
+            if parsed_date >= datetime(2024, int(patching_date.strftime("%m")), 1).date():
                 links.append(url + article.find('a')['href'])
             else:
                 return links    
     next_offset = current_offset + 10        
-    return links + extract_links(date,next_offset) 
+    return links + extract_links(next_offset) 
 
 
 def extract_pages(links):
@@ -184,7 +184,7 @@ def scrape(_data):
 
 def save_data(data):
      df = pd.DataFrame(data)
-     df["Release Date"] = pd.to_datetime(df['Release Date'],format='%d-%m-%Y').dt.date
+     df["Release Date"] = pd.to_datetime(df['Release Date'],format='%d/%m/%Y').dt.date
      folder = 'collected'
      df_sorted = df.sort_values(by='OS')
      file_name = f'Ubuntu-Generated-Month-{patching_date.strftime("%B")}.xlsx'
