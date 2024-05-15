@@ -77,11 +77,11 @@ def skip_link(link):
 
 def is_within_month(parsed_date, patching_date):
      patching_month_start = datetime(patching_date.year, patching_date.month, 1).date()
-     last_day =  calendar.monthrange(patching_date.year, patching_date.month)[1]
-     patching_month_end = datetime(patching_date.year, patching_date.month, last_day).date()
-    
+    #  last_day =  calendar.monthrange(patching_date.year, patching_date.month)[1]
+    #  patching_month_end = datetime(patching_date.year, patching_date.month, last_day).date()
     #  patching_month_start <= <= patching_month_end
-     return patching_month_start <= parsed_date 
+     return datetime(patching_date.year, patching_date.month, 1).date() <= parsed_date 
+    
 
 def parse_date2(date_str):
     return datetime.strptime(date_str, '%d %B %Y').date() 
@@ -226,8 +226,7 @@ async def extract_pages(links):
                               })) 
                    
     return big_data
-                   
-                                            
+                                                         
 
                 
 def get_amd_link(link):
