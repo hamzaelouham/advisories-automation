@@ -79,7 +79,9 @@ def is_within_month(parsed_date, patching_date):
      patching_month_start = datetime(patching_date.year, patching_date.month, 1).date()
      last_day =  calendar.monthrange(patching_date.year, patching_date.month)[1]
      patching_month_end = datetime(patching_date.year, patching_date.month, last_day).date()
-     return patching_month_start <= parsed_date <= patching_month_end
+    
+    #  patching_month_start <= <= patching_month_end
+     return patching_month_start <= parsed_date 
 
 def parse_date2(date_str):
     return datetime.strptime(date_str, '%d %B %Y').date() 
@@ -117,9 +119,54 @@ def extract_links(current_offset=0):
                 links.append(url + article.find('a')['href'])
             else:
                 return links    
-    next_offset = current_offset + 10        
-    return links + extract_links(next_offset) 
+   
+    next_offset = current_offset + 10 
 
+    return links + extract_links(next_offset) 
+    
+# def extract_links(current_offset=0, collected_links=None):
+    if collected_links is None:
+        collected_links = []
+
+    try:
+        html = fetch_security_notices(current_offset)
+    except Exception as e:
+        print(f"Error fetching security notices: {e}")
+        return collected_links
+
+    soup = BeautifulSoup(html, features='lxml')
+    section = soup.find('section', class_='p-strip')
+    articles = section.find_all('article', class_='notice')
+    if not articles:
+        print("No articles found with the given selector.")
+        return collected_links
+
+    new_links_found = False
+    for article in articles:
+        pub_date_elem = article.find('p', class_="u-no-margin u-no-padding--top")
+        if pub_date_elem:
+            try:
+                parsed_date = parse_date2(pub_date_elem.text.strip())
+            except Exception as e:
+                print(f"Error parsing date: {e}")
+                continue
+
+            if is_within_month(parsed_date, patching_date):
+                article_link_elem = article.find('a')
+                if article_link_elem:
+                    collected_links.append(url + article_link_elem['href'])
+                    new_links_found = True
+                else:
+                    print("Article link not found.")
+            else:
+                # Continue processing other articles but stop recursion if an old article is found
+                continue
+
+    if new_links_found:
+        next_offset = current_offset + 10
+        return extract_links(next_offset, collected_links)
+    else:
+        return collected_links
 
 async def extract_pages(links):
     big_data = []
@@ -243,7 +290,7 @@ def scrape(_data):
 
 def save_data(data):
      df = pd.DataFrame(data)
-     df["Release Date"] = pd.to_datetime(df["Release Date"],format='%d/%m/%Y').dt.date
+     df["Release Date"] = pd.to_datetime(df["Release Date"],format="%d/%m/%Y").dt.date
      folder = 'collected'
      df_sorted = df.sort_values(by='OS')
      file_name = f'Ubuntu-Generated-Month-{patching_date.strftime("%B")}.xlsx'
@@ -260,8 +307,9 @@ async def main():
     links = extract_links()
     big_data = await extract_pages(links)
     save_data(big_data)
-    
     log.info('successful finishing. Time taken: %.2f seconds' ,time.time() - initialtime)
-
+    
 if __name__ == "__main__":
    asyncio.run(main())
+   
+    
