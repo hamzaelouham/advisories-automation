@@ -57,10 +57,12 @@ def scrape_single_page(link):
     Severity = tables[0].find_all('tr')[1].find_all('td')[1].text.strip()
     Release_Date = tables[0].find_all('tr')[2].find_all('td')[1].text.strip()
     
-    if len(tables[1].find_all("tr")) == 0:
+    cve_table = soup.find_all('table')
+
+    if len(cve_table[1].find_all("tr")) == 0:
         Cves =  'N/A'
     else:
-        Cves =  ', '.join([td.text.strip() for td in tables[1].find_all("tr")])
+        Cves =  ', '.join([td.text.strip() for td in cve_table[1].find_all("tr")])
     category = "Security Advisory" if Type == 'Security Advisory' else  "General Advisory"
     
       

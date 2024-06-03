@@ -4,7 +4,6 @@ import requests
 import logging
 import pandas as pd
 from bs4 import BeautifulSoup
-import urllib.parse as url_tools 
 from dateutil.relativedelta import relativedelta
 import calendar
 import os
