@@ -109,6 +109,7 @@ def fetch_security_notices(offset):
 def extract_links(current_offset=0):
     links = []
     html = fetch_security_notices(current_offset)
+    
     soup = BeautifulSoup(html, features='lxml')
     articles = soup.select('article', class_='notice')  # Corrected the class name
     for article in articles:
@@ -116,6 +117,7 @@ def extract_links(current_offset=0):
         if pub_date:
             parsed_date = parse_date2(pub_date.text.strip())
             if is_within_month(parsed_date, patching_date):
+                print(url + article.find('a')['href'])
                 links.append(url + article.find('a')['href'])
             else:
                 return links    
@@ -167,12 +169,29 @@ def extract_links(current_offset=0):
         return extract_links(next_offset, collected_links)
     else:
         return collected_links
+def search_for_cves(text):
+    cve_pattern = re.compile(r'CVE-\d{4}-\d{4,7}')
+    # Find all matches of the pattern
+    cves = cve_pattern.findall(text)
+   
+    # Remove duplicates by converting to a set and back to a list
+    cves = list(set(cves))
+
+    # Join the CVE identifiers into a single string
+    cves_str = ', '.join(cves)
+    print(cves_str)
+    # Check if cves_str is empty and print the appropriate message
+    if not cves_str:
+        return 'N/A'
+    else:
+        return cves_str
+
 
 async def extract_pages(links):
     big_data = []
     for link in links:
         if skip_link(link):
-           log.warning('skiping this link : %s',link) 
+           log.warning('skiping this link : %s', link) 
            continue 
         # html = await _get_html(link)  
         # ["latin-1", "iso-8859-1", "windows-1251"]).unicode_markup ,from_encoding=html.encoding
@@ -184,6 +203,7 @@ async def extract_pages(links):
             html = await _get_html(link)
             soup = BeautifulSoup(html, features='lxml')
             section = soup.find('section', class_="p-strip--suru-topped")
+            time.sleep(2)
             if section:
                 break  # Exit loop if section is found
             else:
@@ -205,9 +225,18 @@ async def extract_pages(links):
                if title_element:
                     title = title_element.text.strip()
                col = rows[1].find('div',class_="col-8")
-               ref = rows[2].find('div',class_="col-8")
-               Cves =  ', '.join([li.text.strip() for li in ref.find("ul")])
+              
+               if len(rows) > 2:
+                    ref = rows[2].find('div', class_="col-8")
+                    # Cves =  ', '.join([li.text.strip() for li in ref.find("ul")])
+                    Cves = ', '.join([li.text.strip() for li in ref.find("ul") if li.text.strip().startswith('CVE-') and li.text.strip()])
+                    # check if Cves string variable is empty if it's collect data from text not from ref..
+                    if not Cves:
+                      Cves =  search_for_cves()
+               else:
+                   Cves =  'N/A'
                products = [ p for p in col.find_all("h5") ]
+   
                for product in products:
                     for ub in ubuntu:
                       if product.text.strip().startswith(ub):
@@ -222,7 +251,7 @@ async def extract_pages(links):
                                     'deblink': li.find_all('a')[1]["href"] ,
                                     'CVEs': Cves,
                                     'Bulletin Title and Executive Summary':title.split(':')[1],
-                                      'Announcement links': link
+                                    'Announcement links': f"https://ubuntu.com/security/notices/{title.split(':')[0]}"
                               })) 
                    
     return big_data
@@ -304,6 +333,7 @@ async def main():
     initialtime  = time.time()
     # extracrt & scraping data 
     links = extract_links()
+    print(links)
     big_data = await extract_pages(links)
     save_data(big_data)
     log.info('successful finishing. Time taken: %.2f seconds' ,time.time() - initialtime)
