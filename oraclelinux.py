@@ -24,7 +24,8 @@ oraclelinux = {
     "OL7_x86_64"  :"Oracle Linux 7 (x86_64)",
     "OL8_aarch64" :"Oracle Linux 8 (aarch64)",
     "OL8_x86_64"  :"Oracle Linux 8 (x86_64)",
-    "OL9_x86_64"  :"Oracle Linux 9 (x86_64)	"
+    "OL9_aarch64" :"Oracle Linux 9 (aarch64)",
+    "OL9_x86_64"  :"Oracle Linux 9 (x86_64)",
 }
 
 def get_html(url): 
