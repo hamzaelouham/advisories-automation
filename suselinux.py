@@ -76,9 +76,11 @@ def scrape_page(link):
     html = get_html(link)
     soup = BeautifulSoup(html,features='html.parser')
     title = soup.find("h1").text.strip().split(':')
-    id = f'{title[0]}:{title[1]}'
-    severity = title[2]
-    summary = title[3]
+    if len(title) > 1:
+        id = f'{title[0]}:{title[1]}'
+        severity = title[2]
+        summary = title[3]
+    
     category = "Security Advisory" if title[0].startswith('SUSE-SU') else "General Advisory"
     issue_date = datetime.strptime(soup.find("i").text.strip(), "%a %b %d %H:%M:%S %Z %Y").strftime("%d-%m-%Y")  
     content = soup.find("pre").text
