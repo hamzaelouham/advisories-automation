@@ -118,8 +118,6 @@ def scrape_page(row):
 
 
 
-
-def extract(json):
     # data = []
     # year = int(last_month.strftime("%Y"))
     # month = int(last_month.strftime("%m"))
@@ -135,7 +133,11 @@ def extract(json):
     # for index, row in df.iterrows():
     #     data.extend(scrape_page(row))
     # return data
+    # Ensure date range strings are in datetime format for comparison
+    # start_date_dt = pd.to_datetime(start_date)
+    # end_date_dt = pd.to_datetime(end_date)
 
+def extract(json):
     data = []
     year = int(last_month.strftime("%Y"))
     month = int(last_month.strftime("%m"))
@@ -147,9 +149,6 @@ def extract(json):
     end_date = f'{year}-{month:02d}-{last_month_day:02d}'
     df['published'] = pd.to_datetime(df['published'], format="%d %B %Y")
     
-    # Ensure date range strings are in datetime format for comparison
-    # start_date_dt = pd.to_datetime(start_date)
-    # end_date_dt = pd.to_datetime(end_date)
 
     mask = (df['published'] > start_date) & (df['published'] <= end_date)
     df = df.loc[mask]
@@ -159,6 +158,7 @@ def extract(json):
         print(row['notificationUrl'])
     
     return data
+
 
 
 
