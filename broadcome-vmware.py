@@ -13,6 +13,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 log = logging.getLogger("logger")
 
+url = "https://support.broadcom.com/web/ecx/security-advisory/-/securityadvisory/getSecurityAdvisoryList"
+
 headers = {
    "User-Agent":'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36'
 }
@@ -54,7 +56,7 @@ def get_html(url):
         
         if response.status_code == 200 or response.status_code == 201:
             log.info('Request successful. Status code: %d. Time taken: %.2f seconds', response.status_code,time.time() - initialtime)
-            return response.content
+            return response.content.decode('utf-8')
         else:
             log.error('Unexpected status code: %d. Time taken: %.2f seconds', response.status_code, time.time() - initialtime)
             return
@@ -64,79 +66,108 @@ def get_html(url):
 
 def get_last_day(y,m):
     return calendar.monthrange(y, m)[1]   
- 
-def scrape_page(row):
-    html = get_html(row['notificationUrl'])
+
+def scrape(link):
+    data = {
+        'Advisory ID': 'Advisory ID',
+        'CVSSv3 Range': 'CVSSv3 Range',
+        'Issue date': 'Issue date',
+        'Updated on': 'Updated on',
+        'CVE(s)': 'CVE(s)',
+        'Synopsis': 'Synopsis',
+        'Impacted Products' : '',
+        'Introduction' : '',
+        'Description' : '',
+        'Known Attack Vectors' : '',
+        'Resolution' : '',
+        'Workarounds' : '',
+        'Notes' : '',
+        'Acknowledgements' : '',
+        'Vulnerability Release link' : link,
+        'Atos Advisory Annoucemnet ID' : '',
+        'Atos Advisory Sent on' : '',
+        'Atos Tested':'No',
+        'Atos Recommendation':'Implement It'
+    }
+           
+    html = get_html(link)
     soup = BeautifulSoup(html,features='html.parser')
     card = soup.find_all('div', class_="card-body")[1]
+    text_content = card.get_text()
     table = card.find('table')
-    ul = card.find('ul')
-    tr = table.find_all('tr')
-    html_str = html.decode('utf-8')
-    pattern = r'<h2>(.*?)</h2>\s*<p><b>Description:</b>\s*(.*?)</p>\s*<p><b>Known Attack Vectors:</b>\s*(.*?)</p>\s*<p><b>Workarounds:</b>\s*(.*?)</p>\s*<p><b>Notes:</b>\s*(.*?)</p>\s*<p><b>Acknowledgements:</b>\s*(.*?)</p>'
-
-# Find all matches in the HTML content
-    matches = re.findall(pattern, html_str, re.DOTALL)
-
-# Iterate over matches and print extracted information
-    for match in matches:
-        print("Vulnerability:", match[0])
-        print("Description:", match[1])
-        print("Known Attack Vectors:", match[2])
-        print("Workarounds:", match[3])
-        print("Notes:", match[4])
-        print("Acknowledgements:", match[5])
-        print()
-
-    # pattern = r'<h2>(.*?)</h2>\s*<p><b>Description:</b>\s*(.*?)</p>\s*<p><b>Known Attack Vectors:</b>\s*(.*?)</p>\s*<p><b>Workarounds:</b>\s*(.*?)</p>\s*<p><b>Notes:</b>\s*(.*?)</p>\s*<p><b>Acknowledgements:</b>\s*(.*?)</p>'
-    # matches = re.findall(pattern, html, re.DOTALL)
-    # # Impacted_Products = ""
-    # # if ul is not None:
-    # #     Impacted_Products =  ', '.join([li.text.strip() for li in ul.find_all("li")])
-    
-    # for match in matches:
-    #     print("Vulnerability:", match[0])
-    #     print("Description:", match[1])
-    #     print("Known Attack Vectors:", match[2])
-    #     print("Workarounds:", match[3])
-    #     print("Notes:", match[4])
-    #     print("Acknowledgements:", match[5])
-    #     print()
-    return {
-            'VMware Security Advisory': tr[0].find_all('td')[1].get_text(strip=True),	
-            'CVSSv3 Range' : tr[2].find_all('td')[1].get_text(strip=True),
-            'Issue Date'   : tr[4].find_all('td')[1].get_text(strip=True),
-            'Updated On'   : tr[5].find_all('td')[1].get_text(strip=True),	
-            'CVE'          : row['affectedCve'] ,
-            'Synopsis'     : tr[3].find_all('td')[1].get_text(strip=True),	
-            # 'Impacted Products': Impacted_Products,
-            'Introduction' : card.find('p').text.strip(),
-            'VMware Security Advisory link': row['notificationUrl']
+    labels = {
+        'Advisory ID': 'Advisory ID',
+        'CVSSv3 Range': 'CVSSv3 Range',
+        'Issue date': 'Issue date',
+        'Updated on': 'Updated on',
+        'CVE(s)': 'CVE(s)',
+        'Synopsis': 'Synopsis',
         }
- 
    
-
-
-
-    # data = []
-    # year = int(last_month.strftime("%Y"))
-    # month = int(last_month.strftime("%m"))
-    # last_month_day = get_last_day(year,month)
-    # df = pd.json_normalize(json)
-    # start_date =  f'{year}-{month}-01'
-    # end_date = f'{year}-{month}-{last_month_day}'
-
-    # df['published'] = pd.to_datetime(df['published'], format="%d %B %Y")
-    # mask = (df['field_pub_date'] > start_date) & (df['field_pub_date'] <= end_date)
-    # df = df.loc[mask]
+    # Find all table rows
+    rows = table.find_all('tr')
+    for row in rows:
+        cells = row.find_all('td')
+        if len(cells) == 2:  # Make sure there are two cells: one for the label and one for the value
+            label = cells[0].get_text(strip=True).replace(":", "")
+            value = cells[1].get_text(strip=True)
+            
+            # Check if the label is in our predefined labels
+            if label in labels:
+                data[labels[label]] = value
+          
+    pro_pattern = re.compile(r"Impacted Products\s*(?:[:\-]?\s*)?(.*?)(?=\n\d+\.|\Z)", re.S)
+    match_pro = pro_pattern.search(text_content)
+    if match_pro:
+        impacted_products_section = match_pro.group(1)
+        data["Impacted Products"] = ', '.join([line.strip() for line in impacted_products_section.splitlines() if line.strip()])
+    else:
+        data["Impacted Products"] = ''
+    intro_pattern = re.compile(r"Introduction\s*(?:[:\-]?\s*)?(.*?)(?=\n\d+\.|\Z)", re.S)
+    match_intro = intro_pattern.search(text_content)
+    if match_intro:
+        data["Introduction"] = match_intro.group(1).strip().replace('\xa0', ' ')
+    else:
+        data["Introduction"] = ''
+    know_pattern = re.compile( r"Description\s*(?:[:\-]?\s*)?(.*?)(?=\n(?:Known Attack Vectors|Resolution|Workarounds|Additional Documentation|Acknowledgements|Notes|Response Matrix):|\Z)", re.S)
+    match_know = know_pattern.search(text_content)
+    if match_know:
+        data["Description"] = match_know.group(1).strip().replace('\xa0', ' ')
+    else:
+        data["Description"] = ''
+    know_pattern = re.compile( r"Known Attack Vectors\s*(?:[:\-]?\s*)?(.*?)(?=\n(?:Resolution|Workarounds|Additional Documentation|Acknowledgements|Notes|Response Matrix):|\Z)", re.S)
+    match_know = know_pattern.search(text_content)
+    if match_know:
+        data["Known Attack Vectors"] = match_know.group(1).strip().replace('\xa0', ' ')
+    else:
+        data["Known Attack Vectors"] = ''
+    know_pattern = re.compile( r"Resolution\s*(?:[:\-]?\s*)?(.*?)(?=\n(?:Workarounds|Additional Documentation|Acknowledgements|Notes|Response Matrix):|\Z)", re.S)
+    match_know = know_pattern.search(text_content)
+    if match_know:
+        data["Resolution"] = match_know.group(1).strip().replace('\xa0', ' ')
+    else:
+        data["Resolution"] = ''   
+    know_pattern = re.compile( r"Workarounds\s*(?:[:\-]?\s*)?(.*?)(?=\n(?:Additional Documentation|Acknowledgements|Notes|Response Matrix):|\Z)", re.S)
+    match_know = know_pattern.search(text_content)
+    if match_know:
+        data["Workarounds"] = match_know.group(1).strip().replace('\xa0', ' ')
+    else:
+        data["Workarounds"] = ''     
+    know_pattern = re.compile( r"Acknowledgements\s*(?:[:\-]?\s*)?(.*?)(?=\n(?:Notes|Response Matrix):|\Z)", re.S)
+    match_know = know_pattern.search(text_content)
+    if match_know:
+        data["Acknowledgements"] = match_know.group(1).strip().replace('\xa0', ' ')
+    else:
+        data["Acknowledgements"] = '' 
+    know_pattern = re.compile( r"Notes\s*(?:[:\-]?\s*)?(.*?)(?=\n(?:Response Matrix):|\Z)", re.S)
+    match_know = know_pattern.search(text_content)
+    if match_know:
+        data["Notes"] = match_know.group(1).strip().replace('\xa0', ' ')
+    else:
+        data["Notes"] = ''           
    
-    # for index, row in df.iterrows():
-    #     data.extend(scrape_page(row))
-    # return data
-    # Ensure date range strings are in datetime format for comparison
-    # start_date_dt = pd.to_datetime(start_date)
-    # end_date_dt = pd.to_datetime(end_date)
-
+    return data    
+                  
 def extract(json):
     data = []
     year = int(last_month.strftime("%Y"))
@@ -153,47 +184,41 @@ def extract(json):
     mask = (df['published'] > start_date) & (df['published'] <= end_date)
     df = df.loc[mask]
   
-    for index, row in df.iterrows():
-        data.append(scrape_page(row))
-        print(row['notificationUrl'])
-    
+    for i, row in df.iterrows():
+        data.append(scrape(row['notificationUrl']))
     return data
+        
 
-
-
-
-
-
-
-
- 
-
-
-
-
-
-
-
-
-
-
-
+def save_to_excel(data):
+     if data : 
+        log.info('saving data into excel ...')
+        df = pd.DataFrame(data)
+        filename = str(last_month) + "-vmware-generated.xlsx"
+        df.to_excel(filename, index=False)
+        log.info('Done saving data ! ')    
+     else:
+        log.info('No data to save ! ') 
 
 def main():
 
     initialtime  = time.time()
-    url = "https://support.broadcom.com/web/ecx/security-advisory/-/securityadvisory/getSecurityAdvisoryList"
-
-    
     count = get_json(url)['data']['pageInfo']['totalCount']
     json = get_json(url,count=count)['data']['list']
-    extract(json)
-
- 
+    data = extract(json)
+    save_to_excel(data)
     log.info('successful finishing. Time taken: %.2f seconds' ,time.time() - initialtime)
-
+ 
 if __name__ == "__main__":
      main()
+
+
+
+
+
+   
+
+    
+
 
 
 
