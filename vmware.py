@@ -41,13 +41,14 @@ def fetch_data(url, method='get', json_data=None):
 def get_last_day(year, month):
     return calendar.monthrange(year, month)[1]
 
-def scrape(link):
+def scrape(row):
+    link = row['notificationUrl']
     data = {
         'Advisory ID': 'Advisory ID',
         'CVSSv3 Range': 'CVSSv3 Range',
         'Issue date': 'Issue date',
         'Updated on': 'Updated on',
-        'CVE(s)': 'CVE(s)',
+        'CVE(s)': row['affectedCve'],
         'Synopsis': 'Synopsis',
         'Impacted Products': '',
         'Introduction': '',
@@ -79,7 +80,6 @@ def scrape(link):
         'CVSSv3 Range': 'CVSSv3 Range',
         'Issue date': 'Issue date',
         'Updated on': 'Updated on',
-        'CVE(s)': 'CVE(s)',
         'Synopsis': 'Synopsis'
     }
     
@@ -127,7 +127,7 @@ def extract(json):
     df = df[(df['published'] > start_date) & (df['published'] <= end_date)]
     
     for _, row in df.iterrows():
-        scraped_data = scrape(row['notificationUrl'])
+        scraped_data = scrape(row)
         data.append(scraped_data)
     
     return data
