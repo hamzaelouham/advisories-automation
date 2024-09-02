@@ -232,7 +232,7 @@ async def extract_pages(links):
                     Cves = ', '.join([li.text.strip() for li in ref.find("ul") if li.text.strip().startswith('CVE-') and li.text.strip()])
                     # check if Cves string variable is empty if it's collect data from text not from ref..
                     if not Cves:
-                      Cves =  search_for_cves()
+                      Cves =  search_for_cves(soup.get_text())
                else:
                    Cves =  'N/A'
                products = [ p for p in col.find_all("h5") ]
