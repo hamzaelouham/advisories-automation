@@ -12,7 +12,7 @@ import re
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 log = logging.getLogger("logger")
-last_month = datetime.now(timezone.utc) - relativedelta(months=3)
+last_month = datetime.now(timezone.utc) - relativedelta(months=0)
 session = requests.Session()
 url='https://support.broadcom.com/group/ecx/solutionfiles/-/solutionFiles/getSolutionFiles'
 
@@ -22,11 +22,12 @@ cookies = {
     'OptanonAlertBoxClosed': '2024-04-19T09:49:29.524Z',
     'ac_client_user_id': 'ede8813e-f596-406a-9c20-418bba4910bf',
     '_gz_taid': '1714465997870951',
-    'LFR_SESSION_STATE_71940356': '1725286827926',
-    'liferay-ingress-prd-us': '1725361914.806.44.790162|95b2e232c5e0be8e41c900a6b1ad87e6',
-    'LFR_SESSION_STATE_20102': '1725363029626',
-    'SAML_SP_SESSION_KEY': '_24b0816c8403662175022ad1a591afb2fa2eb12c856bf284e9c4e5f21ee2',
-    'JSESSIONID': 'BB1B0923EC0B7C9F2590730786432227',
+    'liferay-ingress-prd-us': '1727423633.118.43.459222|95b2e232c5e0be8e41c900a6b1ad87e6',
+    'LFR_SESSION_STATE_20102': '1727425426386',
+    'SAML_SP_SESSION_KEY': '_ede7bae0cef1f7cc9ae9209130e4dc4554e1daa2f6eb0710decadc772020',
+    'JSESSIONID': 'D51ECCB06E358D8F24F896D4D028A941',
+    'OptanonConsent': 'isGpcEnabled=0&datestamp=Fri+Sep+27+2024+09%3A37%3A54+GMT%2B0100+(GMT%2B01%3A00)&version=202301.2.0&isIABGlobal=false&hosts=&consentId=93cf45f4-3b74-4206-a615-fb0c26db8f81&interactionCount=1&landingPath=NotLandingPage&groups=1%3A1%2C3%3A1%2C2%3A0%2C4%3A0&geolocation=ES%3BMD&AwaitingReconsent=false',
+    'LFR_SESSION_STATE_71940356': '1727426276912',
 }
   
 
