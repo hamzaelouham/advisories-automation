@@ -98,23 +98,27 @@ def scrape_page(link):
        for li in ul.find_all("li"):
            for product in suselinux: 
                if li.text.startswith(suselinux[product]): 
-                                  
-                  for rpm in li.find_all('li'):
-                    data.append({
-                        'OS': product.split('_')[0],
-                        'Release Date': issue_date,
-                        'Category': category,
-                        'Vendor Category': category,
-                        'Bulletin ID / Patch ID': id, 
-                        'RPMs': rpm.text.strip(),
-                        'CVEs': cves ,
-                        'Bulletin Title and Executive Summary':summary,
-                        'Vendor Rating': severity,
-                        'Atos Rating':'N/A',
-                        'Tested':'NO',
-                        'Exception':'NO',
-                        'Announcement links': link
-                    }) 
+                  match = re.search(r'\((.*?)\)', li.text) 
+                  if match:
+                    architectures = match.group(1).split() 
+                    for arch in architectures:          
+                        for rpm in li.find_all('li'):
+                            
+                            data.append({
+                                'OS': product.split('_')[0],
+                                'Release Date': issue_date,
+                                'Category': category,
+                                'Vendor Category': category,
+                                'Bulletin ID / Patch ID': id, 
+                                'RPMs': f'{rpm.text.strip()}.{arch}.rpm',
+                                'CVEs': cves ,
+                                'Bulletin Title and Executive Summary':summary,
+                                'Vendor Rating': severity,
+                                'Atos Rating':'N/A',
+                                'Tested':'NO',
+                                'Exception':'NO',
+                                'Announcement links': link
+                            }) 
     return data
 
 

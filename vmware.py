@@ -17,7 +17,8 @@ headers = {
     "User-Agent": 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36'
 }
 
-last_month = datetime.now(timezone.utc) - relativedelta(months=1)
+last_month = datetime.now(timezone.utc) 
+# - relativedelta(months=1)
 
 def fetch_data(url, method='get', json_data=None):
     try:
@@ -45,6 +46,7 @@ def scrape(row):
     link = row['notificationUrl']
     data = {
         'Advisory ID': 'Advisory ID',
+        'Severity':row['severity'],
         'CVSSv3 Range': 'CVSSv3 Range',
         'Issue date': 'Issue date',
         'Updated on': 'Updated on',
