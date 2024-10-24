@@ -31,7 +31,10 @@ suselinux = {
     "SLES 12_4":"SUSE Linux Enterprise Server 12 SP5",
     "SLES 12_5":"SUSE Linux Enterprise Module for Basesystem 12-SP5",
     "SLES 12_6":"Basesystem Module 12-SP5",
-    "SLES 12_7":"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
+    "SLES 12_7":"SUSE Linux Enterprise Server for SAP Applications 12 SP5",
+    "SLES 15_8":"SUSE Linux Enterprise Server 15 SP6",
+    "SLES 15_9":"SUSE Linux Enterprise Server for SAP Applications 15 SP6",
+    "SLES 15_10":"Basesystem Module 15-SP6",
 }
 
 
@@ -101,24 +104,25 @@ def scrape_page(link):
                   match = re.search(r'\((.*?)\)', li.text) 
                   if match:
                     architectures = match.group(1).split() 
-                    for arch in architectures:          
-                        for rpm in li.find_all('li'):
+                    for arch in architectures:
+                        if arch in ['x86_64', 'noarch']:          
+                            for rpm in li.find_all('li'):
+                                data.append({
+                                    'OS': product.split('_')[0],
+                                    'Release Date': issue_date,
+                                    'Category': category,
+                                    'Vendor Category': category,
+                                    'Bulletin ID / Patch ID': id, 
+                                    'RPMs': f'{rpm.text.strip()}.{arch}.rpm',
+                                    'CVEs': cves ,
+                                    'Bulletin Title and Executive Summary':summary,
+                                    'Vendor Rating': severity,
+                                    'Atos Rating':'N/A',
+                                    'Tested':'NO',
+                                    'Exception':'NO',
+                                    'Announcement links': link
+                                }) 
                             
-                            data.append({
-                                'OS': product.split('_')[0],
-                                'Release Date': issue_date,
-                                'Category': category,
-                                'Vendor Category': category,
-                                'Bulletin ID / Patch ID': id, 
-                                'RPMs': f'{rpm.text.strip()}.{arch}.rpm',
-                                'CVEs': cves ,
-                                'Bulletin Title and Executive Summary':summary,
-                                'Vendor Rating': severity,
-                                'Atos Rating':'N/A',
-                                'Tested':'NO',
-                                'Exception':'NO',
-                                'Announcement links': link
-                            }) 
     return data
 
 
