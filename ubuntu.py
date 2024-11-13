@@ -21,7 +21,7 @@ http = requests.Session()
 
 url = "https://ubuntu.com"
 
-ubuntu = ('Ubuntu 22.04', 'Ubuntu 20.04')
+ubuntu = ('Ubuntu 22.04', 'Ubuntu 20.04', 'Ubuntu 24.04')
 
 patching_date = datetime.now(timezone.utc) - relativedelta(months=1)
 

@@ -21,6 +21,7 @@ headers = {
 }
 
 patching_date = datetime.now(timezone.utc) - relativedelta(months=1)
+
 uri = f'https://lists.suse.com/pipermail/sle-updates/{patching_date.year}-{patching_date.strftime("%B")}/'
 url = uri+'date.html'
 
@@ -53,7 +54,7 @@ def get_html(url):
             return
     except requests.exceptions.RequestException as error:
         log.error('Error during request: %s', error)
-        return
+        return  
 
 def extract(): 
     html = get_html(url)
@@ -136,20 +137,20 @@ def save_data(data):
      if not os.path.exists(folder):
        os.makedirs(folder)
      df_sorted.to_excel(path, index=False) 
-    
+
+
 def main():
     initialtime  = time.time()
-   
-    
-    # extracrt & scraping data 
-  
+   # extracrt & scraping data 
     save_data(extract())
- 
     log.info('successful finishing. Time taken: %.2f seconds' ,time.time() - initialtime)
-
-
+   
+  
 if __name__ == "__main__":
     main()
+ 
+
+
     
 
 
