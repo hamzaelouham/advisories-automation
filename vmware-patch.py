@@ -22,12 +22,12 @@ cookies = {
     'OptanonAlertBoxClosed': '2024-04-19T09:49:29.524Z',
     'ac_client_user_id': 'ede8813e-f596-406a-9c20-418bba4910bf',
     '_gz_taid': '1714465997870951',
-    'liferay-ingress-prd-us': '1727423633.118.43.459222|95b2e232c5e0be8e41c900a6b1ad87e6',
-    'LFR_SESSION_STATE_20102': '1727425426386',
-    'SAML_SP_SESSION_KEY': '_ede7bae0cef1f7cc9ae9209130e4dc4554e1daa2f6eb0710decadc772020',
-    'JSESSIONID': 'D51ECCB06E358D8F24F896D4D028A941',
-    'OptanonConsent': 'isGpcEnabled=0&datestamp=Fri+Sep+27+2024+09%3A37%3A54+GMT%2B0100+(GMT%2B01%3A00)&version=202301.2.0&isIABGlobal=false&hosts=&consentId=93cf45f4-3b74-4206-a615-fb0c26db8f81&interactionCount=1&landingPath=NotLandingPage&groups=1%3A1%2C3%3A1%2C2%3A0%2C4%3A0&geolocation=ES%3BMD&AwaitingReconsent=false',
-    'LFR_SESSION_STATE_71940356': '1727426276912',
+    'liferay-ingress-prd-us': '1730199544.564.44.287975|95b2e232c5e0be8e41c900a6b1ad87e6',
+    'LFR_SESSION_STATE_20102': '1730204709520',
+    'SAML_SP_SESSION_KEY': '_ff2c7d6dabd286c9efeb10f192e5fe10f1a38bd9fb85711b4e1d74c125c3',
+    'JSESSIONID': '91B04F7C4A35CCAF5A71B99FD02D43F7',
+    'OptanonConsent': 'isGpcEnabled=0&datestamp=Tue+Oct+29+2024+13%3A27%3A14+GMT%2B0100+(GMT%2B01%3A00)&version=202301.2.0&isIABGlobal=false&hosts=&consentId=93cf45f4-3b74-4206-a615-fb0c26db8f81&interactionCount=1&landingPath=NotLandingPage&groups=1%3A1%2C3%3A1%2C2%3A0%2C4%3A0&geolocation=ES%3BMD&AwaitingReconsent=false',
+    'LFR_SESSION_STATE_71940356': '1730204836511',
 }
   
 

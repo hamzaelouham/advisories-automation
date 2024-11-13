@@ -25,16 +25,16 @@ uri = f'https://lists.suse.com/pipermail/sle-updates/{patching_date.year}-{patch
 url = uri+'date.html'
 
 suselinux = {
-    "SLES 15_1":"SUSE Linux Enterprise Server 15 SP5",
-    "SLES 15_2":"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
-    "SLES 15_3":"Basesystem Module 15-SP5",
-    "SLES 12_4":"SUSE Linux Enterprise Server 12 SP5",
-    "SLES 12_5":"SUSE Linux Enterprise Module for Basesystem 12-SP5",
-    "SLES 12_6":"Basesystem Module 12-SP5",
-    "SLES 12_7":"SUSE Linux Enterprise Server for SAP Applications 12 SP5",
-    "SLES 15_8":"SUSE Linux Enterprise Server 15 SP6",
-    "SLES 15_9":"SUSE Linux Enterprise Server for SAP Applications 15 SP6",
-    "SLES 15_10":"Basesystem Module 15-SP6",
+    "SLES 15SP5_1":"SUSE Linux Enterprise Server 15 SP5",
+    "SLES 15SP5_2":"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
+    "SLES 15SP5_3":"Basesystem Module 15-SP5",
+    "SLES 12SP5_4":"SUSE Linux Enterprise Server 12 SP5",
+    "SLES 12SP5_5":"SUSE Linux Enterprise Module for Basesystem 12-SP5",
+    "SLES 12SP5_6":"Basesystem Module 12-SP5",
+    "SLES 12SP5_7":"SUSE Linux Enterprise Server for SAP Applications 12 SP5",
+    "SLES 15SP6_8":"SUSE Linux Enterprise Server 15 SP6",
+    "SLES 15SP6_9":"SUSE Linux Enterprise Server for SAP Applications 15 SP6",
+    "SLES 15SP6_10":"Basesystem Module 15-SP6",
 }
 
 
