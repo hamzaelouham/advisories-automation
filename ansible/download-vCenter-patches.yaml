@@ -1,0 +1,14 @@
+- name: download vCenter patches using custom ansible module
+  hosts: localhost
+  gather_facts: false
+  tasks:
+  - name: Run custom vCenter patch download module
+    download_vCenter_patches:
+      date: "05/21/2024"
+      release: "7.0"
+      path: "./library/patches"
+    register: result
+
+  - name: print result
+    debug:
+      msg: '{{ result }}'
