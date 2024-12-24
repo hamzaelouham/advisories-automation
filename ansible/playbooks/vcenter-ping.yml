@@ -1,0 +1,7 @@
+---
+- name: Ping vCenter servers
+  hosts: all
+  gather_facts: no
+  tasks:
+    - name: Test connectivity to vCenter servers
+      ping:
