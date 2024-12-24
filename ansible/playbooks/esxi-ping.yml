@@ -1,5 +1,6 @@
 ---
 - name: Ping ESXi Hosts
+  hosts: all
   gather_facts: no
   tasks:
     - name: Test connectivity to ESXi hosts
