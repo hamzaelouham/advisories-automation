@@ -132,24 +132,60 @@ def scrape_pages(url):
        page_count = page_count + 1 
     return data
          
-    
-
 
 def save_data(data):
     folder = 'collected'
-    # print(data)
+    
+    # Validate input data
+    if not data or "Release Date" not in data[0]:
+        print("Data is empty or missing 'Release Date' column.")
+        return
+    
+    # Convert data to DataFrame
     df = pd.DataFrame(data)
-    last_month = pd.Timestamp('today').month - 1
-    # print(df) 
-    df['Release Date'] = pd.to_datetime(df['Release Date'])
+    
+    # Ensure "Release Date" is in datetime format
+    df['Release Date'] = pd.to_datetime(df['Release Date'], errors='coerce')
+    
+    # Drop rows with invalid "Release Date"
+    df = df.dropna(subset=['Release Date'])
+    
+    # Filter for last month's data
+    last_month = (datetime.now(timezone.utc) - relativedelta(months=1)).month
     filtered_df = df[df['Release Date'].dt.month == last_month]
-    # save scraped date into execl sheet
+    
+    if filtered_df.empty:
+        print("No data available for the previous month.")
+        return
+    
+    # Create folder if it doesn't exist
+    os.makedirs(folder, exist_ok=True)
+    
+    # Generate file name
     patch_date = datetime.now(timezone.utc) - relativedelta(months=1)
     file_name = f'OL-Generated-Month-{patch_date.strftime("%B")}.xlsx'
     path = os.path.join(folder, file_name)
-    if not os.path.exists(folder):
-       os.makedirs(folder)
-    filtered_df.to_excel(path, index=False) 
+    
+    # Save filtered data to Excel
+    filtered_df.to_excel(path, index=False)
+    print(f"Data saved successfully to {path}.")  
+
+
+# def save_data(data):
+#     folder = 'collected'
+#     # print(data)
+#     df = pd.DataFrame(data)
+#     last_month = pd.Timestamp('today').month - 1
+#     # print(df) 
+#     df['Release Date'] = pd.to_datetime(df['Release Date'])
+#     filtered_df = df[df['Release Date'].dt.month == last_month]
+#     # save scraped date into execl sheet
+#     patch_date = datetime.now(timezone.utc) - relativedelta(months=1)
+#     file_name = f'OL-Generated-Month-{patch_date.strftime("%B")}.xlsx'
+#     path = os.path.join(folder, file_name)
+#     if not os.path.exists(folder):
+#        os.makedirs(folder)
+#     filtered_df.to_excel(path, index=False) 
 
   
 
